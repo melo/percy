@@ -5,13 +5,13 @@ use MyTests;
 use Test::More;
 use Test::Fatal;
 
-my $p = test_percy_db();
+my $s = test_percy_schema();
 
 for my $table (qw( oid_storage oid_map )) {
   my $rows;
   is(
     exception {
-      ($rows) = $p->dbh->selectrow_array('
+      ($rows) = $s->db->dbh->selectrow_array('
         SELECT COUNT(*) FROM oid_storage
       ');
     },
