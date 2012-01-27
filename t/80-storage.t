@@ -36,6 +36,26 @@ subtest 'tx' => sub {
 };
 
 
+subtest 'reconnect' => sub {
+  my $found;
+  my $db = $s->db;
+
+  $found = select_row($db->dbh, $oid);
+  is($found, $uid, 'Got a row without problems');
+
+  is(exception { $db->_dbh(undef) },
+    undef, 'Remove the DBI handle, no exceptions');
+
+  $found = select_row($db->dbh, $oid);
+  is($found, $uid, 'Select worked, so reconnect worked');
+
+  is(exception { $db->dbh->disconnect }, undef, 'Disconnected DBI handle');
+
+  $found = select_row($db->dbh, $oid);
+  is($found, $uid, 'Select worked, so reconnect worked again');
+};
+
+
 done_testing();
 
 

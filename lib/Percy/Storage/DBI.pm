@@ -11,7 +11,7 @@ use namespace::clean;
 
 extends 'Percy::Storage';
 
-has 'dbh' => (is => 'rw', default => sub { shift->schema->connect() });
+has '_dbh' => (is => 'rw');
 
 
 ## Builder
@@ -22,7 +22,23 @@ sub connect {
   my $driver_class = join('::', $class, $type);
   $class = $driver_class if Class::Load::try_load_class($driver_class);
 
-  return $class->new(dbh => $dbh, schema => $schema);
+  return $class->new(_dbh => $dbh, schema => $schema);
+}
+
+
+## DBI handle access
+sub dbh {
+  my ($self) = @_;
+  my $dbh = $self->_dbh;
+
+  $dbh = undef unless $dbh && $dbh->ping;
+
+  unless (defined $dbh) {
+    $dbh = $self->schema->connect_info->{connect}->($self);
+    $self->_dbh($dbh);
+  }
+
+  return $dbh;
 }
 
 
@@ -30,6 +46,11 @@ sub connect {
 sub tx {
   my ($self, $cb, @rest) = @_;
   my $dbh = $self->dbh;
+
+  unless ($dbh->ping) {
+    $self->_dbh(undef);
+    $dbh = $self->dbh;
+  }
 
   $self->_tx_begin;
   try {
