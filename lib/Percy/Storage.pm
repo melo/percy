@@ -5,24 +5,20 @@ package Percy::Storage;
 # AUTHORITY
 
 use Percy::Object;
-use Class::Load 'try_load_class';
 use namespace::clean;
 
+has 'schema' => (is => 'ro', required => 1);
 
-sub deploy {
-  my ($class, $percy, @rest) = @_;
-  my $type = $percy->dbh->{Driver}{Name};
+sub connect {
+  my $class = ref($_[0]) || $_[0];
 
-  my $driver_class = join('::', $class, $type);
-  $class = $driver_class if try_load_class($driver_class);
-
-  $class->_deploy_tables($percy, @rest);
+  die "FATAL: redefine the connect() method in '$class',";
 }
 
-sub _deploy_tables {
-  my ($class) = @_;
+sub deploy {
+  my $class = ref($_[0]) || $_[0];
 
-  die "No default _deploy_tables() for class $class,";
+  die "FATAL: redefine the deploy() method in '$class',";
 }
 
 1;

@@ -35,4 +35,18 @@ subtest 'type registry' => sub {
 };
 
 
+subtest 'db' => sub {
+  my $si = MySchema->schema;
+
+  my $db1 = $si->db;
+  isa_ok($db1, 'Percy::Storage::DBI');
+
+  my $db2 = $si->db;
+  is($db1, $db2, 'db() returns the same instance');
+
+  is($si, $db1->schema,
+    'DB objects have a reference to the schema who created them');
+};
+
+
 done_testing();
