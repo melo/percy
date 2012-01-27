@@ -26,4 +26,27 @@ sub connect {
 }
 
 
+## Transactions
+sub tx {
+  my ($self, $cb, @rest) = @_;
+  my $dbh = $self->dbh;
+
+  $self->_tx_begin;
+  try {
+    $cb->($self, $dbh, @rest);
+    $self->_tx_commit;
+  }
+  catch {
+    $self->_tx_rollback;
+    die $_;
+  };
+
+  return;
+}
+
+sub _tx_begin    { $_[0]->dbh->begin_work }
+sub _tx_commit   { $_[0]->dbh->commit }
+sub _tx_rollback { $_[0]->dbh->rollback }
+
+
 1;
