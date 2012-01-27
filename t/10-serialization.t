@@ -8,19 +8,22 @@ use Test::Deep;
 
 my @test_cases = ([{a => 1}, '{"a":1}', 'very simple structure'],);
 
-my $p = test_percy_db();
+my $s  = test_percy_schema();
+my $db = $s->db;
+my $t  = $s->type_spec(simple => {});
+
 for my $tc (@test_cases) {
   my ($in, $out, $d) = @$tc;
 
-  my $s;
-  is(exception { $s = $p->encode_to_db($in) }, undef,
-    "serialize() lives for $d");
-  is($s, $out, '... output as expected');
+  my $o;
+  is(exception { $o = $t->encode_to_db($db, {d => $in}) },
+    undef, "encode_to_db() lives for $d");
+  is($o, $out, '... output as expected');
 
-  is(exception { $s = $p->decode_from_db($out) },
-    undef, "... deserialize() lives from output");
-  cmp_deeply($s, $in, '... and back to the input we go');
-
+  is(exception { $o = $t->decode_from_db($db, $out) },
+    undef, "... decode_from_db() lives from output");
+  cmp_deeply($o, $in, '... and back to the input we go');
 }
+
 
 done_testing();
