@@ -5,7 +5,10 @@ package Percy::Schema;
 # AUTHORITY
 
 use Percy::Object;
+use Percy::Schema::Type;
 use namespace::clean;
+
+has 'types' => (is => 'ro', default => sub { {} });
 
 ## Singleton management
 {
@@ -17,6 +20,19 @@ use namespace::clean;
 
     return $instances{$class} ||= $class->new;
   }
+}
+
+
+## Type specification management
+sub type_spec {
+  my ($self, $type, $spec) = @_;
+  my $types = $self->types;
+
+  return $types->{$type} = Percy::Schema::Type->new(%$spec, type => $type)
+    if $spec;
+
+  return unless exists $types->{$type};
+  return $types->{$type};
 }
 
 
