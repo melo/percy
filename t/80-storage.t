@@ -31,7 +31,7 @@ subtest 'tx' => sub {
 
   ## Commited
   $db->tx(sub { insert_row($_[1], $uid) });
-  my $found = select_row($db->dbh, $oid);
+  $found = select_row($db->dbh, $oid);
   is($found, $uid, 'Transaction was commited properly');
 };
 
