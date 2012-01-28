@@ -84,6 +84,8 @@ sub create {
   return $r;
 }
 
+
+## DBI shortcuts
 sub _dbi_create_obj {
   my ($dbh, $r, $data) = @_;
 
@@ -116,6 +118,8 @@ sub _dbi_obj_for_oid {
   ', undef, $r->{oid});
 }
 
+
+## Shortcuts to the Schema type registry
 sub _type_spec_for {
   my ($self, $type) = @_;
 
