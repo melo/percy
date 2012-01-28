@@ -9,6 +9,10 @@ use namespace::clean;
 extends 'Percy::Schema';
 
 
+## Add a 'x' type with default values
+MySchema->schema->type_spec(x => {});
+
+
 ## Make sure every test Percy schema is created on a different temporary
 ## directory
 {

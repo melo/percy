@@ -13,6 +13,117 @@ extends 'Percy::Storage';
 
 has '_dbh' => (is => 'rw');
 
+## DB Operations
+sub fetch {
+  my ($self, $type, $pk) = @_;
+  my $dbh = $self->dbh;
+
+  my $r;
+  if (defined $pk) {
+    $r = {pk => $pk, type => $type, f => \&_dbi_obj_for_type_pk};
+  }
+  else {
+    $r = {oid => $type, f => \&_dbi_obj_for_oid};
+    $type = undef;
+  }
+
+  my $spec;
+  if ($type) {
+    $spec = _type_spec_for($self, $type);
+    $spec->before_fetch($self, $r);
+  }
+
+  my @data = (delete $r->{f})->($dbh, $r);
+  return unless @data;
+
+  $spec = _type_spec_for($self, $data[1]);
+
+  $r->{oid}  = $data[0];
+  $r->{type} = $data[1];
+  $r->{pk}   = $data[2];
+  $r->{d}    = $spec->decode_from_db($self, $data[3]);
+
+  $spec->after_fetch($self, $r);
+
+  return $r;
+}
+
+sub create {
+  my ($self, $type, $data, $pk) = @_;
+  my $spec = _type_spec_for($self, $type);
+
+  my $r;
+  $self->tx(
+    sub {
+      my ($me, $dbh) = @_;
+
+      $r = {
+        d    => $data,
+        pk   => $pk,
+        oid  => undef,
+        type => $type,
+      };
+
+      $pk = $r->{pk} = $spec->generate_id($self, $r)
+        unless defined $pk;
+      die "FATAL: failed to generate an PK for type '$type',"
+        unless defined $pk;
+
+      $spec->before_change($self, $r);
+      $spec->before_create($self, $r);
+
+      my $oid = $r->{oid} =
+        _dbi_create_obj($dbh, $r, $spec->encode_to_db($self, $r));
+
+      $spec->after_create($self, $r);
+      $spec->after_change($self, $r);
+    }
+  );
+
+  return $r;
+}
+
+sub _dbi_create_obj {
+  my ($dbh, $r, $data) = @_;
+
+  $dbh->do('
+      INSERT INTO obj_storage
+                 (pk, type, data)
+          VALUES (?,  ?,    ?   )
+  ', undef, $r->{pk}, $r->{type}, $data);
+  return $dbh->last_insert_id(undef, undef, undef, undef);
+}
+
+sub _dbi_obj_for_type_pk {
+  my ($dbh, $r) = @_;
+
+  return $dbh->selectrow_array('
+      SELECT oid, type, pk, data
+        FROM obj_storage
+       WHERE pk=?
+         AND type=?
+  ', undef, $r->{pk}, $r->{type});
+}
+
+sub _dbi_obj_for_oid {
+  my ($dbh, $r) = @_;
+
+  return $dbh->selectrow_array('
+      SELECT oid, type, pk, data
+        FROM obj_storage
+       WHERE oid=?
+  ', undef, $r->{oid});
+}
+
+sub _type_spec_for {
+  my ($self, $type) = @_;
+
+  my $spec = $self->schema->type_spec($type);
+  die "FATAL: type '$type' not registered," unless defined $spec;
+
+  return $spec;
+}
+
 
 ## Builder
 sub connect {
