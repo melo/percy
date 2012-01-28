@@ -3,7 +3,7 @@ package Percy::Schema::Type;
 use Percy::Object;
 use Percy::Utils qw( generate_uuid );
 use JSON::XS qw( encode_json decode_json );
-use namespace::clean;
+use namespace::clean -except => 'new';
 
 has 'type' => (is => 'ro', required => 1);
 
