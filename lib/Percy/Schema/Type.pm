@@ -48,4 +48,19 @@ sub encode_to_db   { return $_[0]{encode_to_db_cb}(@_) }
 sub decode_from_db { return $_[0]{decode_from_db_cb}(@_) }
 
 
+## DB callbacks
+for my $w (qw(before after)) {
+  for my $e (qw(change create fetch)) {
+    my $meth = "${w}_${e}";
+    my $attr = "${meth}_cb";
+    has $attr => (is => 'ro');
+
+    no strict 'refs';
+    *{__PACKAGE__ . '::' . $meth} = sub {
+      return ($_[0]{$attr} || sub { })->(@_);
+    };
+  }
+}
+
+
 1;

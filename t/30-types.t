@@ -42,6 +42,33 @@ subtest 'encode/decode callbacks' => sub {
 };
 
 
+subtest 'db callbacks' => sub {
+  for my $w (qw( before after )) {
+    for my $e (qw( create change fetch )) {
+      my $t;
+      my $meth = "${w}_${e}";
+      my $attr = "${meth}_cb";
+
+      is(exception { $t = Percy::Schema::Type->new(type => 'x') },
+        undef, "Type created without '$attr'");
+      is($t->$meth(), undef, "... the default does nothing");
+
+      is(
+        exception {
+          $t = Percy::Schema::Type->new(
+            type => 'x',
+            $attr => sub { uc($attr) },
+          );
+        },
+        undef,
+        "Type created with '$attr'"
+      );
+      is($t->$meth(), uc($attr), "... works now");
+    }
+  }
+};
+
+
 subtest 'bad boys' => sub {
   like(
     exception { Percy::Schema::Type->new },
