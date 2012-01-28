@@ -84,6 +84,58 @@ sub create {
   return $r;
 }
 
+sub update {
+  my $self = shift;
+  my ($oid, $type, $pk, $data) = _parse_update_args(@_);
+
+  my $rows;
+  $self->tx(
+    sub {
+      my ($me, $dbh) = @_;
+
+      unless ($type) {
+        ($type, $pk) = _dbi_type_pk_for_oid($dbh, $oid);
+      }
+      my $spec = _type_spec_for($self, $type);
+
+      my $r = {
+        d    => $data,
+        pk   => $pk,
+        oid  => $oid,
+        type => $type,
+      };
+
+      $spec->before_change($self, $r);
+      $spec->before_update($self, $r);
+
+      $rows = _dbi_update_obj($dbh, $oid, $spec->encode_to_db($self, $r));
+
+      $spec->after_update($self, $r);
+      $spec->after_change($self, $r);
+    }
+  );
+
+  return $rows;
+}
+
+
+## Parser for update() parameters
+sub _parse_update_args {
+  my ($a1, $a2, $a3) = @_;
+  my ($oid, $type, $pk, $data);
+
+  die "FATAL: invalid arguments to update()," unless defined($a1);
+
+  # update($type => $pk => $data)
+  return (undef, $a1, $a2, $a3) if defined($a2) && defined($a3);
+
+  # update($oid => $data)
+  return ($a1, undef, undef, $a2) if defined($a2);
+
+  # update($r)
+  return ($a1->{oid}, $a1->{type}, $a1->{pk}, $a1->{d});
+}
+
 
 ## DBI shortcuts
 sub _dbi_create_obj {
@@ -95,6 +147,16 @@ sub _dbi_create_obj {
           VALUES (?,  ?,    ?   )
   ', undef, $r->{pk}, $r->{type}, $data);
   return $dbh->last_insert_id(undef, undef, undef, undef);
+}
+
+sub _dbi_update_obj {
+  my ($dbh, $oid, $data) = @_;
+
+  return $dbh->do('
+      UPDATE obj_storage
+         SET data = ?
+       WHERE oid = ?
+  ', undef, $data, $oid);
 }
 
 sub _dbi_obj_for_type_pk {
@@ -116,6 +178,16 @@ sub _dbi_obj_for_oid {
         FROM obj_storage
        WHERE oid=?
   ', undef, $r->{oid});
+}
+
+sub _dbi_type_pk_for_oid {
+  my ($dbh, $oid) = @_;
+
+  return $dbh->selectrow_array('
+      SELECT type, pk
+        FROM obj_storage
+       WHERE oid=?
+  ', undef, $oid);
 }
 
 

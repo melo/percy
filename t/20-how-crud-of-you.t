@@ -60,4 +60,29 @@ subtest 'fetch()' => sub {
 };
 
 
+subtest 'update()' => sub {
+  use utf8;
+  my $data = {c => time(), d => 'Olé, Olé'};
+  my $r;
+
+  ## Prepare a record to play with
+  is(exception { $r = $db->create(x => $data) }, undef, 'DB create() lives');
+  is(exception { $f = $db->fetch($r->{oid}) }, undef, 'DB fetch() lives');
+  cmp_deeply($f, $r, '... got our play record');
+
+  ## Single record
+  $r->{d}{cc} = 42;
+  is(exception { $f = $db->update($r) },
+    undef, 'DB update, with single arg, lives');
+  is(0 + $f, 1, '... one row updated');
+  is(exception { $f = $db->fetch($r) }, undef, 'DB fetch, with OID, lives');
+  cmp_deeply($f, $r, '... got the expected record');
+
+  $r->{oid} = -1;
+  is(exception { $f = $db->update($r) },
+    undef, 'DB update with a bad oid lives');
+  is(0 + $f, 0, '... zero row updated');
+};
+
+
 done_testing();
