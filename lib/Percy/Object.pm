@@ -1,7 +1,6 @@
 package Percy::Object;
 
 # ABSTRACT: Small base class for our Percy objects
-
 # VERSION
 # AUTHORITY
 

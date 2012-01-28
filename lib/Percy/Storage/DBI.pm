@@ -1,6 +1,6 @@
 package Percy::Storage::DBI;
 
-# ABSTRACT: Percy interface for a DBI storage
+# ABSTRACT: Percy interface for a DBI storage engine
 # VERSION
 # AUTHORITY
 

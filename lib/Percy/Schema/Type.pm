@@ -1,5 +1,9 @@
 package Percy::Schema::Type;
 
+# ABSTRACT: Percy schema types
+# VERSION
+# AUTHORITY
+
 use Percy::Object;
 use Percy::Utils qw( generate_uuid );
 use JSON::XS qw( encode_json decode_json );
