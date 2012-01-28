@@ -64,9 +64,11 @@ sub type_spec {
   return $types->{$type} = Percy::Schema::Type->new(%$spec, type => $type)
     if $spec;
 
-  return unless exists $types->{$type};
+  return $self->default_type_spec($type) unless exists $types->{$type};
   return $types->{$type};
 }
+
+sub default_type_spec { }
 
 
 1;

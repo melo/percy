@@ -26,4 +26,13 @@ extends 'Percy::Schema';
   }
 }
 
+
+## Allow us to change the behaviour of default_type_spec()
+{
+  my $next_default_type;
+  sub default_type_spec { return $next_default_type }
+  sub set_default_type_spec { $next_default_type = $_[1] }
+}
+
+
 1;

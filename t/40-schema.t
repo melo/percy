@@ -2,6 +2,7 @@
 
 use Test::More;
 use Test::Fatal;
+use Test::Deep;
 use lib 't/lib';
 use MySchema;
 
@@ -20,6 +21,11 @@ subtest 'type registry' => sub {
   is(exception { $t1 = $si->type_spec('my_type') },
     undef, "With missing type, type_spec() doesn't die");
   is($t1, undef, "... and returns undef");
+
+  MySchema->set_default_type_spec({a => 1});
+  is(exception { $t1 = $si->type_spec('my_type') },
+    undef, "With missing type, type_spec() doesn't die");
+  cmp_deeply($t1, {a => 1}, "... and returns the new default type_spec");
 
   my $t2;
   is(exception { $t2 = $si->type_spec(my_type => {}) },
