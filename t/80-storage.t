@@ -64,8 +64,8 @@ sub insert_row {
   my ($dbh, $uid) = @_;
 
   $dbh->do('
-    INSERT INTO oid_map (id,   pk, type)
-                 VALUES (NULL, ?,  ?   )
+    INSERT INTO obj_storage (id,   pk, type, data)
+                     VALUES (NULL, ?,  ?,    "42")
   ', undef, $uid, 'my_type');
   return $dbh->last_insert_id(undef, undef, undef, undef);
 }
@@ -75,7 +75,7 @@ sub select_row {
 
   my ($found) = $dbh->selectrow_array('
     SELECT pk
-      FROM oid_map
+      FROM obj_storage
      WHERE id=?
   ', undef, $oid);
 

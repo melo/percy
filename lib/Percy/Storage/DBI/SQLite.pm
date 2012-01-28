@@ -16,24 +16,16 @@ sub deploy {
 
   $dbh->begin_work;
   $dbh->do('
-    CREATE TABLE oid_storage (
+    CREATE TABLE obj_storage (
       id         INTEGER  NOT NULL
-          CONSTRAINT oid_storage_pk PRIMARY KEY,
-      created_at INTEGER     NOT NULL,
-      updated_at INTEGER     NOT NULL,
-      type       VARCHAR(64) NOT NULL,
-      data       BLOB        NOT NULL
-    )
-  ');
+          CONSTRAINT obj_storage_pk PRIMARY KEY AUTOINCREMENT,
 
-  $dbh->do('
-    CREATE TABLE oid_map (
-      id         INTEGER NOT NULL
-          CONSTRAINT oid_map_pk PRIMARY KEY AUTOINCREMENT,
       pk         VARCHAR(64) NOT NULL,
       type       VARCHAR(64) NOT NULL,
 
-      CONSTRAINT oid_map_pk_type_un UNIQUE (pk, type)
+      data       BLOB        NOT NULL,
+
+      CONSTRAINT obj_storage_pk_type_un UNIQUE (pk, type)
     )
   ');
   $dbh->commit;
