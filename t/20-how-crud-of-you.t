@@ -50,6 +50,10 @@ subtest 'fetch()' => sub {
     undef, 'DB fetch, with OID, lives');
   cmp_deeply($f, $r, '... got the expected record');
 
+  is(exception { $f = $db->fetch($r) }, undef,
+    'DB fetch, with record, lives');
+  cmp_deeply($f, $r, '... got the expected record');
+
   is(exception { $f = $db->fetch(x => $r->{pk}) },
     undef, 'DB fetch, with PK/Type, lives');
   cmp_deeply($f, $r, '... got the expected record');

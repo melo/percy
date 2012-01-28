@@ -23,6 +23,7 @@ sub fetch {
     $r = {pk => $pk, type => $type, f => \&_dbi_obj_for_type_pk};
   }
   else {
+    $type = $type->{oid} if ref($type);
     $r = {oid => $type, f => \&_dbi_obj_for_oid};
     $type = undef;
   }
