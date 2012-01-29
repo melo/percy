@@ -73,11 +73,28 @@ subtest 'update()' => sub {
   ## Single record
   $r->{d}{cc} = 42;
   is(exception { $f = $db->update($r) },
-    undef, 'DB update, with single arg, lives');
+    undef, 'DB update, with record, lives');
   is(0 + $f, 1, '... one row updated');
   is(exception { $f = $db->fetch($r) }, undef, 'DB fetch, with OID, lives');
   cmp_deeply($f, $r, '... got the expected record');
 
+  ## Single oid
+  $r->{d} = {x => 'y'};
+  is(exception { $f = $db->update($r->{oid} => $r->{d}) },
+    undef, 'DB update, with oid, lives');
+  is(0 + $f, 1, '... one row updated');
+  is(exception { $f = $db->fetch($r) }, undef, 'DB fetch lives');
+  cmp_deeply($f, $r, '... got the expected record');
+
+  ## type,pk
+  $r->{d} = {z => 'a'};
+  is(exception { $f = $db->update($r->{type} => $r->{pk} => $r->{d}) },
+    undef, 'DB update, with type/pk, lives');
+  is(0 + $f, 1, '... one row updated');
+  is(exception { $f = $db->fetch($r) }, undef, 'DB fetch lives');
+  cmp_deeply($f, $r, '... got the expected record');
+
+  ## Update for unknown entry
   $r->{oid} = -1;
   is(exception { $f = $db->update($r) },
     undef, 'DB update with a bad oid lives');

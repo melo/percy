@@ -15,26 +15,17 @@ has '_dbh' => (is => 'rw');
 
 ## DB Operations
 sub fetch {
-  my ($self, $type, $pk) = @_;
-  my $dbh = $self->dbh;
-
-  my $r;
-  if (defined $pk) {
-    $r = {pk => $pk, type => $type, f => \&_dbi_obj_for_type_pk};
-  }
-  else {
-    $type = $type->{oid} if ref($type);
-    $r = {oid => $type, f => \&_dbi_obj_for_oid};
-    $type = undef;
-  }
+  my $self = shift;
+  my $r = _parse_args('fetch', @_, 'no_data');
 
   my $spec;
-  if ($type) {
+  if (my $type = $r->{type}) {
     $spec = _type_spec_for($self, $type);
     $spec->before_fetch($self, $r);
   }
 
-  my @data = (delete $r->{f})->($dbh, $r);
+  my $dbh = $self->dbh;
+  my @data = _dbi_fetch_obj($dbh, $r);
   return unless @data;
 
   $spec = _type_spec_for($self, $data[1]);
@@ -86,29 +77,20 @@ sub create {
 
 sub update {
   my $self = shift;
-  my ($oid, $type, $pk, $data) = _parse_update_args(@_);
+  my $r = _parse_args('update', @_);
 
   my $rows;
   $self->tx(
     sub {
       my ($me, $dbh) = @_;
 
-      unless ($type) {
-        ($type, $pk) = _dbi_type_pk_for_oid($dbh, $oid);
-      }
+      my $type = _type_fetch($dbh, $r);
       my $spec = _type_spec_for($self, $type);
-
-      my $r = {
-        d    => $data,
-        pk   => $pk,
-        oid  => $oid,
-        type => $type,
-      };
 
       $spec->before_change($self, $r);
       $spec->before_update($self, $r);
 
-      $rows = _dbi_update_obj($dbh, $oid, $spec->encode_to_db($self, $r));
+      $rows = _dbi_update_obj($dbh, $r, $spec->encode_to_db($self, $r));
 
       $spec->after_update($self, $r);
       $spec->after_change($self, $r);
@@ -119,21 +101,23 @@ sub update {
 }
 
 
-## Parser for update() parameters
-sub _parse_update_args {
-  my ($a1, $a2, $a3) = @_;
-  my ($oid, $type, $pk, $data);
+## Parser for parameters
+sub _parse_args {
+  my ($meth, $a1, $a2, $a3) = @_;
 
-  die "FATAL: invalid arguments to update()," unless defined($a1);
+  die "FATAL: invalid arguments to $meth()," unless defined($a1);
 
-  # update($type => $pk => $data)
-  return (undef, $a1, $a2, $a3) if defined($a2) && defined($a3);
+  # method($type => $pk => $data)
+  return {type => $a1, pk => $a2, d => $a3}
+    if defined($a2) && defined($a3);
 
-  # update($oid => $data)
-  return ($a1, undef, undef, $a2) if defined($a2);
+  # method($r)
+  return $a1 if ref($a1);
 
-  # update($r)
-  return ($a1->{oid}, $a1->{type}, $a1->{pk}, $a1->{d});
+  # method($oid => $data)
+  return {oid => $a1, d => $a2} if defined($a2);
+
+  die "FATAL: Could not parse arguments for '$meth',";
 }
 
 
@@ -150,44 +134,66 @@ sub _dbi_create_obj {
 }
 
 sub _dbi_update_obj {
-  my ($dbh, $oid, $data) = @_;
+  my ($dbh, $conds, $data) = @_;
+  my ($sql, @bind) = _dbi_obj_where('
+      UPDATE obj_storage SET data=?
+  ', $conds);
 
-  return $dbh->do('
-      UPDATE obj_storage
-         SET data = ?
-       WHERE oid = ?
-  ', undef, $data, $oid);
+  return $dbh->do($sql, undef, $data, @bind);
 }
 
-sub _dbi_obj_for_type_pk {
-  my ($dbh, $r) = @_;
+sub _dbi_delete_obj {
+  my ($dbh, $conds) = @_;
+  my ($sql, @bind)  = _dbi_obj_where('
+      DELETE FROM obj_storage
+  ', $conds);
 
-  return $dbh->selectrow_array('
+  return $dbh->do($sql, undef, @bind);
+}
+
+sub _dbi_fetch_obj {
+  my ($dbh, $conds) = @_;
+  my ($sql, @bind)  = _dbi_obj_where('
       SELECT oid, type, pk, data
         FROM obj_storage
-       WHERE pk=?
-         AND type=?
-  ', undef, $r->{pk}, $r->{type});
+  ', $conds);
+
+  return $dbh->selectrow_array($sql, undef, @bind);
 }
 
-sub _dbi_obj_for_oid {
+sub _dbi_fetch_obj_meta {
+  my ($dbh, $conds) = @_;
+  my ($sql, @bind)  = _dbi_obj_where('
+      SELECT oid, type, pk
+        FROM obj_storage
+  ', $conds);
+
+  return $dbh->selectrow_array($sql, undef, @bind);
+}
+
+sub _dbi_obj_where {
+  my ($sql, $r) = @_;
+
+  return ("$sql WHERE oid=?", $r->{oid}) if defined $r->{oid};
+  return ("$sql WHERE type=? AND pk=?", $r->{type}, $r->{pk})
+    if defined $r->{type} && defined $r->{pk};
+  die "FATAL: insufficient conditions to identify a specific object,";
+}
+
+sub _type_fetch {
   my ($dbh, $r) = @_;
 
-  return $dbh->selectrow_array('
-      SELECT oid, type, pk, data
-        FROM obj_storage
-       WHERE oid=?
-  ', undef, $r->{oid});
-}
+  my $type = $r->{type};
+  unless (defined $type) {
+    my @data = _dbi_fetch_obj_meta($dbh, $r);
+    return unless @data;
 
-sub _dbi_type_pk_for_oid {
-  my ($dbh, $oid) = @_;
+    $r->{oid} = $data[0];
+    $type = $r->{type} = $data[1];
+    $r->{pk} = $data[2];
+  }
 
-  return $dbh->selectrow_array('
-      SELECT type, pk
-        FROM obj_storage
-       WHERE oid=?
-  ', undef, $oid);
+  return $type;
 }
 
 
