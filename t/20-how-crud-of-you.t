@@ -95,10 +95,18 @@ subtest 'update()' => sub {
   cmp_deeply($f, $r, '... got the expected record');
 
   ## Update for unknown entry
-  $r->{oid} = -1;
-  is(exception { $f = $db->update($r) },
-    undef, 'DB update with a bad oid lives');
-  is(0 + $f, 0, '... zero row updated');
+  is(exception { $f = $db->update(-1 => $data) },
+    undef, 'DB update with a unknown oid lives');
+  is($f, undef, '... undef returned because no type could be found');
+
+  is(exception { $f = $db->update({oid => -1, d => $data}) },
+    undef, 'DB update with a unknown record lives');
+  is($f, undef, '... undef returned because no type could be found');
+
+  is(exception { $f = $db->update(x => -1 => $data) },
+    undef, 'DB update with a unknown type/pk lives');
+  isnt($f, undef, '... undef was not returned so update query was run');
+  is(0 + $f, 0, '... and 0 rows were returned as expected');
 };
 
 

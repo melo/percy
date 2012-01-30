@@ -85,6 +85,8 @@ sub update {
       my ($me, $dbh) = @_;
 
       my $type = _type_fetch($dbh, $r);
+      return unless defined $type;
+
       my $spec = _type_spec_for($self, $type);
 
       $spec->before_change($self, $r);
