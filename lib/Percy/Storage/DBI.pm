@@ -61,14 +61,14 @@ sub create {
       die "FATAL: failed to generate an PK for type '$type',"
         unless defined $pk;
 
-      $spec->before_change($self, $r);
+      $spec->before_change($self, $r, 'create');
       $spec->before_create($self, $r);
 
       my $oid = $r->{oid} =
         _dbi_create_obj($dbh, $r, $spec->encode_to_db($self, $r));
 
       $spec->after_create($self, $r);
-      $spec->after_change($self, $r);
+      $spec->after_change($self, $r, 'create');
     }
   );
 
@@ -89,13 +89,13 @@ sub update {
 
       my $spec = _type_spec_for($self, $type);
 
-      $spec->before_change($self, $r);
+      $spec->before_change($self, $r, 'update');
       $spec->before_update($self, $r);
 
       $rows = _dbi_update_obj($dbh, $r, $spec->encode_to_db($self, $r));
 
       $spec->after_update($self, $r);
-      $spec->after_change($self, $r);
+      $spec->after_change($self, $r, 'update');
     }
   );
 
@@ -116,13 +116,13 @@ sub delete {
 
       my $spec = _type_spec_for($self, $type);
 
-      $spec->before_change($self, $r);
+      $spec->before_change($self, $r, 'delete');
       $spec->before_delete($self, $r);
 
       $rows = _dbi_delete_obj($dbh, $r);
 
       $spec->after_delete($self, $r);
-      $spec->after_change($self, $r);
+      $spec->after_change($self, $r, 'delete');
     }
   );
 

@@ -23,10 +23,12 @@ $s->type_spec(
     after_change_cb => sub {
       $cb_rec{calls}++;
       $cb_rec{after_change}    = $cb_rec{calls};
+      $cb_rec{after_change_op} = $_[3];
     },
     before_change_cb => sub {
       $cb_rec{calls}++;
       $cb_rec{before_change}    = $cb_rec{calls};
+      $cb_rec{before_change_op} = $_[3];
     },
 
     after_create_cb => sub {
@@ -71,6 +73,8 @@ my $e = exception {
       before_create    => 2,
       after_create     => 3,
       after_change     => 4,
+      before_change_op => 'create',
+      after_change_op  => 'create',
     },
     '... callbacks called as expected'
   );
@@ -86,6 +90,8 @@ my $e = exception {
       after_change     => 4,
       before_fetch     => 5,
       after_fetch      => 6,
+      before_change_op => 'create',
+      after_change_op  => 'create',
     },
     '... callbacks called as expected'
   );
@@ -101,6 +107,8 @@ my $e = exception {
       after_change     => 4,
       before_fetch     => 5,
       after_fetch      => 7,
+      before_change_op => 'create',
+      after_change_op  => 'create',
     },
     '... callbacks called as expected'
   );
@@ -119,6 +127,8 @@ my $e = exception {
       after_fetch      => 7,
       before_update    => 9,
       after_update     => 10,
+      before_change_op => 'update',
+      after_change_op  => 'update',
     },
     '... callbacks called as expected'
   );
@@ -138,6 +148,8 @@ my $e = exception {
       after_update     => 10,
       before_delete    => 13,
       after_delete     => 14,
+      before_change_op => 'delete',
+      after_change_op  => 'delete',
     },
     '... callbacks called as expected'
   );
