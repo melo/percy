@@ -29,11 +29,12 @@ subtest 'create()' => sub {
     undef, 'DB fetch, with OID, lives');
   cmp_deeply($f, $r, '... got the expected record');
 
+  my $id = Percy::Utils::generate_uuid();
   $data = {b => 2};
-  is(exception { $r = $db->create(x => $data => 42) },
+  is(exception { $r = $db->create(x => $data => $id) },
     undef, 'DB create() with ID lives');
 
-  is(exception { $f = $db->fetch(x => 42) },
+  is(exception { $f = $db->fetch(x => $id) },
     undef, 'DB fetch, with PK/Type, lives');
   cmp_deeply($f, $r, '... got the expected record');
 };
