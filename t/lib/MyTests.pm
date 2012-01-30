@@ -6,6 +6,9 @@ use namespace::clean;
 
 ## Export our builder function
 sub import {
+  warnings->import;
+  strict->import;
+
   my $target = caller();
 
   no strict 'refs';

@@ -43,6 +43,7 @@ subtest 'create()' => sub {
 subtest 'fetch()' => sub {
   my $data = {a => 1};
   my $r = create_record($data);
+  my $f;
 
   is(exception { $f = $db->fetch($r->{oid}) },
     undef, 'DB fetch, with OID, lives');
@@ -61,6 +62,7 @@ subtest 'fetch()' => sub {
 subtest 'update()' => sub {
   use utf8;
   my $data = {c => time(), d => 'Olé, Olé'};
+  my $f;
 
   ## Prepare a record to play with
   my $r = create_record($data);
@@ -106,7 +108,7 @@ subtest 'update()' => sub {
 
 
 subtest 'delete()' => sub {
-  my $r;
+  my ($r, $f);
 
   ## Record
   $r = create_record({a => 42, c => 43});
@@ -156,6 +158,7 @@ done_testing();
 ## Create a record to play
 sub create_record {
   my ($data) = @_;
+  my ($r, $f);
 
   is(exception { $r = $db->create(x => $data) }, undef, 'DB create() lives');
   is(exception { $f = $db->fetch($r->{oid}) }, undef, 'DB fetch() lives');

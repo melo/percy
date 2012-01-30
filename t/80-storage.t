@@ -7,11 +7,11 @@ use Test::Fatal;
 use Percy::Utils;
 
 my $s = test_percy_schema();
+my $uid = Percy::Utils::generate_uuid();
+my $oid;
 
 subtest 'tx' => sub {
   my $db  = $s->db;
-  my $uid = Percy::Utils::generate_uuid();
-  my $oid;
 
   ## Rollback
   like(
@@ -37,8 +37,8 @@ subtest 'tx' => sub {
 
 
 subtest 'reconnect' => sub {
-  my $found;
   my $db = $s->db;
+  my $found;
 
   $found = select_row($db->dbh, $oid);
   is($found, $uid, 'Got a row without problems');
