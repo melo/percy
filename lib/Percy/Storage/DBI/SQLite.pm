@@ -17,7 +17,7 @@ sub deploy {
   $dbh->begin_work;
   $dbh->do('
     CREATE TABLE obj_storage (
-      id         INTEGER  NOT NULL
+      oid        INTEGER  NOT NULL
           CONSTRAINT obj_storage_pk PRIMARY KEY AUTOINCREMENT,
 
       pk         VARCHAR(64) NOT NULL,
