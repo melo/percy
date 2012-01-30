@@ -54,7 +54,7 @@ sub decode_from_db { return $_[0]{decode_from_db_cb}(@_) }
 
 ## DB callbacks
 for my $w (qw(before after)) {
-  for my $e (qw(change create update fetch)) {
+  for my $e (qw(change create update delete fetch)) {
     my $meth = "${w}_${e}";
     my $attr = "${meth}_cb";
     has $attr => (is => 'ro');

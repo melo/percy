@@ -44,7 +44,7 @@ subtest 'encode/decode callbacks' => sub {
 
 subtest 'db callbacks' => sub {
   for my $w (qw( before after )) {
-    for my $e (qw( create change update fetch )) {
+    for my $e (qw( create change update delete fetch )) {
       my $t;
       my $meth = "${w}_${e}";
       my $attr = "${meth}_cb";

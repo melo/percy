@@ -105,6 +105,51 @@ subtest 'update()' => sub {
 };
 
 
+subtest 'delete()' => sub {
+  my $r;
+
+  ## Record
+  $r = create_record({a => 42, c => 43});
+  is(exception { $f = $db->delete($r) },
+    undef, 'DB delete, with record, lives');
+  is(0 + $f, 1, '... one row deleted');
+  is(exception { $f = $db->fetch($r) }, undef,
+    'DB fetch, with record, lives');
+  is($f, undef, '... record does not exist anymore');
+
+  ## Single oid
+  $r = create_record({a => 42, c => 43});
+  is(exception { $f = $db->delete($r->{oid}) },
+    undef, 'DB delete, with record, lives');
+  is(0 + $f, 1, '... one row deleted');
+  is(exception { $f = $db->fetch($r) }, undef, 'DB fetch, with OID, lives');
+  is($f, undef, '... record does not exist anymore');
+
+  ## type,pk
+  $r = create_record({a => 42, c => 43});
+  is(exception { $f = $db->delete($r->{type} => $r->{pk}) },
+    undef, 'DB delete, with record, lives');
+  is(0 + $f, 1, '... one row deleted');
+  is(exception { $f = $db->fetch($r) },
+    undef, 'DB fetch, with Type/Pk, lives');
+  is($f, undef, '... record does not exist anymore');
+
+  ## Delete for unknown entry with OID
+  is(exception { $f = $db->delete(-1) },
+    undef, 'DB delete with a unknown oid lives');
+  is($f, undef, '... undef returned because no type could be found');
+
+  is(exception { $f = $db->delete({oid => -1}) },
+    undef, 'DB delete with a unknown record lives');
+  is($f, undef, '... undef returned because no type could be found');
+
+  is(exception { $f = $db->delete(x => -1) },
+    undef, 'DB delete with a unknown type/pk lives');
+  isnt($f, undef, '... undef was not returned so delete query was run');
+  is(0 + $f, 0, '... and 0 rows were returned as expected');
+};
+
+
 done_testing();
 
 

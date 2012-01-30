@@ -102,6 +102,33 @@ sub update {
   return $rows;
 }
 
+sub delete {
+  my $self = shift;
+  my $r = _parse_args('delete', @_, 'no data');
+
+  my $rows;
+  $self->tx(
+    sub {
+      my ($me, $dbh) = @_;
+
+      my $type = _type_fetch($dbh, $r);
+      return unless defined $type;
+
+      my $spec = _type_spec_for($self, $type);
+
+      $spec->before_change($self, $r);
+      $spec->before_delete($self, $r);
+
+      $rows = _dbi_delete_obj($dbh, $r);
+
+      $spec->after_delete($self, $r);
+      $spec->after_change($self, $r);
+    }
+  );
+
+  return $rows;
+}
+
 
 ## Parser for parameters
 sub _parse_args {
