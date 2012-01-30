@@ -1,6 +1,5 @@
-#!perl
+package HowCrudOfYou;
 
-use lib 't/lib';
 use MyTests;
 use Test::More;
 use Test::Fatal;
@@ -166,3 +165,5 @@ sub create_record {
 
   return $r;
 }
+
+1;
