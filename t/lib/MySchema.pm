@@ -23,8 +23,14 @@ MySchema->schema->type_spec(x => {});
 
     return {
       connect => sub {
-        my $dbi = 'dbi:SQLite:dbname=' . catfile($temp_dir, 'percy.sqlite');
-        return DBI->connect($dbi, '', '', {RaiseError => 1, AutoCommit => 1});
+        my $dbi = $ENV{PERCY_DSN}
+          || 'dbi:SQLite:dbname=' . catfile($temp_dir, 'percy.sqlite');
+        return DBI->connect(
+          $dbi,
+          ($ENV{PERCY_USER} || ''),
+          ($ENV{PERCY_PASS} || ''),
+          {RaiseError => 1, AutoCommit => 1}
+        );
       },
     };
   }
