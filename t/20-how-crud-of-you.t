@@ -42,9 +42,7 @@ subtest 'create()' => sub {
 
 subtest 'fetch()' => sub {
   my $data = {a => 1};
-  my $r;
-
-  is(exception { $r = $db->create(x => $data) }, undef, 'DB create() lives');
+  my $r = create_record($data);
 
   is(exception { $f = $db->fetch($r->{oid}) },
     undef, 'DB fetch, with OID, lives');
@@ -63,12 +61,9 @@ subtest 'fetch()' => sub {
 subtest 'update()' => sub {
   use utf8;
   my $data = {c => time(), d => 'Olé, Olé'};
-  my $r;
 
   ## Prepare a record to play with
-  is(exception { $r = $db->create(x => $data) }, undef, 'DB create() lives');
-  is(exception { $f = $db->fetch($r->{oid}) }, undef, 'DB fetch() lives');
-  cmp_deeply($f, $r, '... got our play record');
+  my $r = create_record($data);
 
   ## Single record
   $r->{d}{cc} = 42;
@@ -111,3 +106,15 @@ subtest 'update()' => sub {
 
 
 done_testing();
+
+
+## Create a record to play
+sub create_record {
+  my ($data) = @_;
+
+  is(exception { $r = $db->create(x => $data) }, undef, 'DB create() lives');
+  is(exception { $f = $db->fetch($r->{oid}) }, undef, 'DB fetch() lives');
+  cmp_deeply($f, $r, '... got our play record');
+
+  return $r;
+}
