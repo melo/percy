@@ -7,6 +7,7 @@ package Percy::Storage::DBI;
 use Percy::Object;
 use Class::Load ();
 use Try::Tiny;
+use Guard 'guard';
 use namespace::clean;
 
 extends 'Percy::Storage';
@@ -269,6 +270,10 @@ sub dbh {
 sub tx {
   my ($self, $cb, @rest) = @_;
   my $dbh = $self->dbh;
+
+  my $tx = ++$self->{_tx};
+  my $g = guard { --$self->{_tx} };
+  return $cb->($self, $dbh, @rest) if $tx > 1;
 
   unless ($dbh->ping) {
     $self->_dbh(undef);

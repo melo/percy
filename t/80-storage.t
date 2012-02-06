@@ -6,12 +6,12 @@ use Test::More;
 use Test::Fatal;
 use Percy::Utils;
 
-my $s = test_percy_schema();
+my $s   = test_percy_schema();
 my $uid = Percy::Utils::generate_uuid();
 my $oid;
 
 subtest 'tx' => sub {
-  my $db  = $s->db;
+  my $db = $s->db;
 
   ## Rollback
   like(
@@ -33,6 +33,33 @@ subtest 'tx' => sub {
   $db->tx(sub { insert_row($_[1], $uid) });
   $found = select_row($db->dbh, $oid);
   is($found, $uid, 'Transaction was commited properly');
+};
+
+
+subtest 'tx nested' => sub {
+  my $db = $s->db;
+
+  my ($oid1, $oid2) = @_;
+  my $uid1 = Percy::Utils::generate_uuid();
+  my $uid2 = Percy::Utils::generate_uuid();
+  like(
+    exception {
+      $db->tx(
+        sub {
+          $oid1 = insert_row($_[1], $uid1);
+
+          $db->tx(sub { $oid2 = insert_row($_[1], $uid2) });
+
+          die 'will die here';
+        }
+      );
+    },
+    qr{will die here},
+    'Nested transaction doesnt die'
+  );
+
+  is(select_row($db->dbh, $oid1), undef, 'First oid was not found');
+  is(select_row($db->dbh, $oid2), undef, '... neither was the second one');
 };
 
 
