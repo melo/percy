@@ -45,4 +45,10 @@ MySchema->schema->type_spec(x => {});
 }
 
 
+## Some types to play with
+
+MySchema->schema->type_spec(masta => {sets => {slaves => {type => 'slava'}}});
+MySchema->schema->type_spec(slava => {});
+
+
 1;

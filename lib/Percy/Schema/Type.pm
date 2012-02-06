@@ -52,6 +52,10 @@ sub encode_to_db   { return $_[0]{encode_to_db_cb}(@_) }
 sub decode_from_db { return $_[0]{decode_from_db_cb}(@_) }
 
 
+## Sets
+has 'sets' => (is => 'ro', default => sub { {} });
+
+
 ## DB callbacks
 for my $w (qw(before after)) {
   for my $e (qw(change create update delete fetch)) {

@@ -41,6 +41,43 @@ subtest 'type registry' => sub {
 };
 
 
+subtest 'sets' => sub {
+  my $si = MySchema->schema;
+  is(
+    exception { $si->type_spec('mt' => {sets => {st => {type => 'slave'}}}) },
+    undef,
+    'Added type with set'
+  );
+
+  cmp_deeply(
+    $si->sets,
+    { mt_st_set => {
+        set_name => 'mt_st_set',
+        type     => 'slave',
+        master   => 'mt',
+      },
+      masta_slaves_set => {
+        set_name => "masta_slaves_set",
+        type     => "slava",
+        master   => 'masta',
+      },
+    },
+    '... set registry updated',
+  );
+
+  cmp_deeply(
+    $si->set_spec({type => 'mt'}, 'st'),
+    $si->set_spec('mt_st_set'),
+    'set_spec() accepts both object/set and set_name'
+  );
+  cmp_deeply(
+    $si->set_spec('mt_st_set'),
+    {type => 'slave', master => 'mt', set_name => 'mt_st_set'},
+    '... and return the set spec information properly'
+  );
+};
+
+
 subtest 'db' => sub {
   my $si = MySchema->schema;
 

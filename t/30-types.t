@@ -69,6 +69,20 @@ subtest 'db callbacks' => sub {
 };
 
 
+subtest 'sets' => sub {
+  my $t = Percy::Schema::Type->new(
+    type => 'set_type',
+    sets => {'xpto' => {type => 'ypto'}},
+  );
+
+  cmp_deeply(
+    $t->sets,
+    {xpto => {type => 'ypto'}},
+    'Set was configured correctly',
+  );
+};
+
+
 subtest 'bad boys' => sub {
   like(
     exception { Percy::Schema::Type->new },

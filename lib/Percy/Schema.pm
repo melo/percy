@@ -9,7 +9,8 @@ use Percy::Schema::Type;
 use namespace::clean;
 
 has 'types' => (is => 'ro', default => sub { {} });
-has 'db' => (is => 'ro', builder => '_build_db');
+has 'sets'  => (is => 'ro', default => sub { {} });
+has 'db'    => (is => 'ro', builder => '_build_db');
 
 
 ## Singleton management
@@ -56,13 +57,45 @@ sub connect_info {
 }
 
 
+## Set management
+sub set_name {
+  my ($self, $type, $set) = @_;
+  $type = $type->{type} if ref $type;
+
+  return join('_', $type, $set, 'set');
+}
+
+sub set_spec {
+  my ($self, $master, $set) = @_;
+  my $set_name = $master;
+  $set_name = $self->set_name($master, $set) if defined $set;
+
+  my $sets = $self->sets;
+  return unless exists $sets->{$set_name};
+  return $sets->{$set_name};
+}
+
+
 ## Type specification management
 sub type_spec {
   my ($self, $type, $spec) = @_;
   my $types = $self->types;
+  my $sets  = $self->sets;
 
-  return $types->{$type} = Percy::Schema::Type->new(%$spec, type => $type)
-    if $spec;
+  if ($spec) {
+    my $t = Percy::Schema::Type->new(%$spec, type => $type);
+    my $type_sets = $t->sets;
+
+    for my $sn (keys %$type_sets) {
+      my $si = $type_sets->{$sn};
+      my $fsn = $self->set_name($type, $sn);
+      $si->{master}   = $type;
+      $si->{set_name} = $fsn;
+      $sets->{$fsn}   = $si;
+    }
+
+    return $types->{$type} = $t;
+  }
 
   return $self->default_type_spec($type) unless exists $types->{$type};
   return $types->{$type};
