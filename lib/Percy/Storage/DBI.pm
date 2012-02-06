@@ -281,8 +281,9 @@ sub tx {
     $self->_tx_commit;
   }
   catch {
+    my $e = $_;
     $self->_tx_rollback;
-    die $_;
+    die $e;
   };
 
   return;
