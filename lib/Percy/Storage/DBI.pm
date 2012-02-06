@@ -131,6 +131,34 @@ sub delete {
 }
 
 
+## Set operations
+sub add_to_set {
+  my ($self, $master, $set, $slave) = @_;
+  my $schema   = $self->schema;
+  my $set_spec = $schema->set_spec($master, $set);
+  my $set_name = $set_spec->{set_name};
+
+  $slave->{$set_name} = {
+    pk   => $master->{pk},
+    type => $master->{type},
+  };
+
+  $self->tx(
+    sub {
+      my ($si, $dbh) = @_;
+
+      $slave = $self->create($set_spec->{slave} => $slave);
+
+      $dbh->do("
+        INSERT INTO $set_name (m_oid, s_oid) VALUES (?, ?)
+      ", undef, $master->{oid}, $slave->{oid});
+    }
+  );
+
+  return $slave;
+}
+
+
 ## Parser for parameters
 sub _parse_args {
   my ($meth, $a1, $a2, $a3) = @_;

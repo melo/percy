@@ -4,6 +4,7 @@ use Test::More;
 use Test::Fatal;
 use Test::Deep;
 use lib 't/lib';
+use MyTests;
 use MySchema;
 
 subtest 'instances' => sub {
@@ -42,7 +43,9 @@ subtest 'type registry' => sub {
 
 
 subtest 'sets' => sub {
-  my $si = MySchema->schema;
+  my $si = test_percy_schema();
+  my $db = $si->db;
+
   is(exception { $si->type_spec('mt' => {sets => {sn => {slave => 'sl'}}}) },
     undef, 'Added type with set');
   is(exception { $si->type_spec(sl => {}) },
@@ -73,6 +76,24 @@ subtest 'sets' => sub {
     $si->set_spec('mt_sn_set'),
     {slave => 'sl', master => 'mt', set_name => 'mt_sn_set'},
     '... and return the set spec information properly'
+  );
+
+  $db->deploy_set_tables;
+  my ($master, $slave);
+  is(exception { $master = $db->create(mt => {m => 1}) },
+    undef, 'Created object for type mt');
+  is(exception { $slave = $db->add_to_set($master, 'sn', {slv => 42}) },
+    undef, '... added slave to set');
+
+  my $slave_copy = $db->fetch($slave);
+  ok($slave_copy, 'Got copy of slave object');
+  cmp_deeply(
+    $slave_copy->{d},
+    { slv => 42,
+      $si->set_name($master, 'sn'),
+      {pk => $master->{pk}, type => $master->{type}}
+    },
+    '... created slave has link to parent'
   );
 };
 
