@@ -114,6 +114,20 @@ subtest 'sets' => sub {
     bag($slave, $slave2),
     '... expected elements returned'
   );
+
+  my $rows;
+  is(exception { $rows = $db->delete_from_set($master, 'sn', $slave) },
+    undef, 'delete_from_set() doesnt die');
+  is(0 + $rows, 1, '... expected number of set elements deleted');
+
+  is(exception { $set_elems = $db->fetch_set($master, 'sn') },
+    undef, 'Called fetch_set() without problems');
+  is(scalar(@$set_elems), 1, '... got a single element back');
+  cmp_deeply($set_elems, [$slave2], '... expected elements returned');
+
+  is(exception { $rows = $db->delete_from_set($master, 'sn', $slave) },
+    undef, 'delete_from_set() with slave not in set lives');
+  is(0 + $rows, 0, '... expected number of set elements deleted');
 };
 
 

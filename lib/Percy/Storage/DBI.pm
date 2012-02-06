@@ -189,6 +189,26 @@ sub add_to_set {
   return $slave;
 }
 
+sub delete_from_set {
+  my ($self, $master, $set, $slave) = @_;
+  my $set_name = $self->schema->set_name($master, $set);
+
+  my $r;
+  $self->tx(
+    sub {
+      my ($db, $dbh) = @_;
+
+      $r = $dbh->do("
+        DELETE FROM $set_name
+         WHERE m_oid=?
+           AND s_oid=?",
+        undef, $master->{oid}, $slave->{oid});
+    }
+  );
+
+  return $r;
+}
+
 
 ## Parser for parameters
 sub _parse_args {
