@@ -10,7 +10,7 @@ use namespace::clean;
 extends 'Percy::Storage::DBI';
 
 
-sub deploy {
+sub _deploy_obj_storage_table {
   my ($self) = @_;
   my $dbh = $self->dbh;
 

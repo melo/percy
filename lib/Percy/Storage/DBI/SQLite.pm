@@ -10,13 +10,12 @@ use namespace::clean;
 extends 'Percy::Storage::DBI';
 
 
-sub deploy {
+sub _deploy_obj_storage_table {
   my ($self) = @_;
   my $dbh = $self->dbh;
 
-  $dbh->begin_work;
   $dbh->do('
-    CREATE TABLE obj_storage (
+    CREATE TABLE IF NOT EXISTS obj_storage (
       oid        INTEGER  NOT NULL
           CONSTRAINT obj_storage_pk PRIMARY KEY AUTOINCREMENT,
 
@@ -28,7 +27,7 @@ sub deploy {
       CONSTRAINT obj_storage_pk_type_un UNIQUE (pk, type)
     )
   ');
-  $dbh->commit;
 }
+
 
 1;
