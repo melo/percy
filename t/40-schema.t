@@ -95,6 +95,25 @@ subtest 'sets' => sub {
     },
     '... created slave has link to parent'
   );
+
+  my $set_elems;
+  is(exception { $set_elems = $db->fetch_set($master, 'sn') },
+    undef, 'Called fetch_set() without problems');
+  is(scalar(@$set_elems), 1, '... got some elements back');
+  cmp_deeply($set_elems, [$slave], '... expected elements returned');
+
+  my $slave2;
+  is(exception { $slave2 = $db->add_to_set($master, 'sn', {slv => 84}) },
+    undef, '... added another slave to set');
+
+  is(exception { $set_elems = $db->fetch_set($master, 'sn') },
+    undef, 'Called fetch_set() without problems');
+  is(scalar(@$set_elems), 2, '... got two elements back');
+  cmp_deeply(
+    $set_elems,
+    bag($slave, $slave2),
+    '... expected elements returned'
+  );
 };
 
 
