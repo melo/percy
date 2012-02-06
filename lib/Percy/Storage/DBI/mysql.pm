@@ -29,4 +29,19 @@ sub _deploy_obj_storage_table {
   ');
 }
 
+sub _deploy_set_table {
+  my ($self, $set_spec) = @_;
+  my $dbh = $self->dbh;
+
+  my $sn = $set_spec->{set_name};
+  $dbh->do("
+    CREATE TABLE IF NOT EXISTS $sn (
+      m_oid        INTEGER NOT NULL,
+      s_oid        INTEGER NOT NULL,
+
+      CONSTRAINT ${sn}_pk PRIMARY KEY (m_oid, s_oid)
+    )
+  ");
+}
+
 1;
