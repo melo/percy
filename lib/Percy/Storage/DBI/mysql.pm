@@ -12,9 +12,8 @@ extends 'Percy::Storage::DBI';
 
 sub _deploy_obj_storage_table {
   my ($self) = @_;
-  my $dbh = $self->dbh;
 
-  $dbh->do('
+  $self->_deploy_table('
     CREATE TABLE IF NOT EXISTS obj_storage (
       oid         INTEGER NOT NULL AUTO_INCREMENT,
 
@@ -31,10 +30,9 @@ sub _deploy_obj_storage_table {
 
 sub _deploy_set_table {
   my ($self, $set_spec) = @_;
-  my $dbh = $self->dbh;
 
   my $sn = $set_spec->{set_name};
-  $dbh->do("
+  $self->_deploy_table("
     CREATE TABLE IF NOT EXISTS $sn (
       m_oid        INTEGER NOT NULL,
       s_oid        INTEGER NOT NULL,

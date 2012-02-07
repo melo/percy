@@ -44,4 +44,11 @@ sub _deploy_set_table {
   die "FATAL: redefine the _deploy_set_table() method in '$class',";
 }
 
+sub _deploy_table {
+  my ($self, $sql) = @_;
+
+  $self->dbh->do($sql);
+}
+
+
 1;
