@@ -39,9 +39,17 @@ sub _deploy_obj_storage_table {
 }
 
 sub _deploy_set_table {
-  my $class = ref($_[0]) || $_[0];
+  my ($self, $set_spec) = @_;
 
-  die "FATAL: redefine the _deploy_set_table() method in '$class',";
+  my $sn = $set_spec->{set_name};
+  $self->_deploy_table("
+    CREATE TABLE IF NOT EXISTS $sn (
+      m_oid        INTEGER NOT NULL,
+      s_oid        INTEGER NOT NULL,
+
+      CONSTRAINT ${sn}_pk PRIMARY KEY (m_oid, s_oid)
+    )
+  ");
 }
 
 sub _deploy_table {
