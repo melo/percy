@@ -55,7 +55,20 @@ sub _deploy_set_table {
 sub _deploy_table {
   my ($self, $sql) = @_;
 
-  $self->dbh->do($sql);
+  if (my $spec = $ENV{PERCY_DEPLOY_SQL_DUMP}) {
+    if (my ($fn) = $spec =~ m/^=(.+)$/) {
+      open(my $fh, '>>', $fn)
+        or die "FATAL: Could not open deploy SQL dump file '$fn': $!,";
+      print $fh $sql . ";\n\n";
+      close($fh);
+    }
+    else {
+      print STDERR "[$$] Percy deploy() SQL:\n$sql\n\n";
+    }
+  }
+  else {
+    $self->dbh->do($sql);
+  }
 }
 
 
