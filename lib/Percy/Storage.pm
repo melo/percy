@@ -27,8 +27,8 @@ sub deploy_set_tables {
   my $self = shift;
   my $sets = $self->schema->sets;
 
-  for my $set_spec (values %$sets) {
-    $self->_deploy_set_table($set_spec, @_);
+  for my $spec (sort { $a->{set_name} cmp $b->{set_name} } values %$sets) {
+    $self->_deploy_set_table($spec, @_);
   }
 }
 
