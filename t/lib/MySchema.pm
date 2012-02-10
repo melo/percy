@@ -52,4 +52,29 @@ MySchema->schema->type_spec(
 MySchema->schema->type_spec(slava => {});
 
 
+## Added some types with sorted sets
+MySchema->schema->type_spec(
+  sorted_sets => {
+    sets => {
+      by_number => {
+        slave     => 'slava',
+        sorted_by => {field => 'number', type => 'Integer'},
+      },
+      by_string => {
+        slave     => 'slava',
+        sorted_by => {field => 'string', type => 'String'},
+      },
+      by_date => {
+        slave     => 'slava',
+        sorted_by => {field => 'date', type => 'Date'},
+      },
+      by_datetime => {
+        slave     => 'slava',
+        sorted_by => {field => 'datetime', type => 'DateTime'},
+      },
+    },
+  },
+);
+
+
 1;

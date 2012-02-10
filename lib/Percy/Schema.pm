@@ -92,6 +92,12 @@ sub type_spec {
       $si->{master}   = $type;
       $si->{set_name} = $fsn;
       $sets->{$fsn}   = $si;
+
+      if (my $sb = $si->{sorted_by}) {
+        my $f = $sb->{field};
+        $sb->{field} = sub { return $_[1]{d}{$f} }
+          unless ref $f;
+      }
     }
 
     return $types->{$type} = $t;

@@ -134,19 +134,25 @@ sub delete {
 ## Set operations
 sub fetch_set {
   my ($self, $master, $set) = @_;
-  my $set_name = $self->schema->set_name($master, $set);
+  my $set_spec = $self->schema->set_spec($master, $set);
+  my $set_name = $set_spec->{set_name};
 
   my $set_elems;
   $self->tx(
     sub {
       my ($db, $dbh) = @_;
-
-      $set_elems = $dbh->selectall_arrayref("
+      my $sql = "
         SELECT docs.oid, docs.type, docs.pk, docs.data
           FROM $set_name sn
                JOIN obj_storage docs ON (docs.oid=sn.s_oid)
          WHERE sn.m_oid=?
-      ", undef, $master->{oid});
+      ";
+      if (my $sb = $set_spec->{sorted_by}) {
+        my $field = lc("f_$sb->{type}");
+        $sql .= "  ORDER BY sn.$field";
+      }
+
+      $set_elems = $dbh->selectall_arrayref($sql, undef, $master->{oid});
 
       for my $elem (@$set_elems) {
         my $spec = _type_spec_for($self, $elem->[1]);
@@ -180,9 +186,19 @@ sub add_to_set {
 
       $slave = $self->create($set_spec->{slave} => $slave);
 
-      $dbh->do("
-        INSERT INTO $set_name (m_oid, s_oid) VALUES (?, ?)
-      ", undef, $master->{oid}, $slave->{oid});
+      if (my $sb = $set_spec->{sorted_by}) {
+        my $field = lc("f_$sb->{type}");
+        $dbh->do("
+          INSERT INTO $set_name (m_oid, s_oid, $field) VALUES (?, ?, ?)
+        ", undef, $master->{oid}, $slave->{oid},
+          $sb->{field}->($self, $slave));
+
+      }
+      else {
+        $dbh->do("
+          INSERT INTO $set_name (m_oid, s_oid) VALUES (?, ?)
+        ", undef, $master->{oid}, $slave->{oid});
+      }
     }
   );
 

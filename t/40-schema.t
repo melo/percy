@@ -63,6 +63,30 @@ subtest 'sets' => sub {
         slave    => "slava",
         master   => 'masta',
       },
+      sorted_sets_by_date_set => {
+        set_name  => 'sorted_sets_by_date_set',
+        slave     => 'slava',
+        master    => 'sorted_sets',
+        sorted_by => {field => ignore(), type => 'Date'},
+      },
+      sorted_sets_by_datetime_set => {
+        set_name  => 'sorted_sets_by_datetime_set',
+        slave     => 'slava',
+        master    => 'sorted_sets',
+        sorted_by => {field => ignore(), type => 'DateTime'},
+      },
+      sorted_sets_by_number_set => {
+        set_name  => 'sorted_sets_by_number_set',
+        slave     => 'slava',
+        master    => 'sorted_sets',
+        sorted_by => {field => ignore(), type => 'Integer'},
+      },
+      sorted_sets_by_string_set => {
+        set_name  => 'sorted_sets_by_string_set',
+        slave     => 'slava',
+        master    => 'sorted_sets',
+        sorted_by => {field => ignore(), type => 'String'},
+      },
     },
     '... set registry updated',
   );
@@ -128,6 +152,143 @@ subtest 'sets' => sub {
   is(exception { $rows = $db->delete_from_set($master, 'sn', $slave) },
     undef, 'delete_from_set() with slave not in set lives');
   is(0 + $rows, 0, '... expected number of set elements deleted');
+};
+
+
+subtest 'sets ordered' => sub {
+  my $si  = test_percy_schema();
+  my $db  = $si->db;
+  my $top = $db->create(sorted_sets => {});
+
+  ## order by number
+  cmp_deeply($db->fetch_set($top, 'by_number'), [], 'Empty set');
+  is(exception { $db->add_to_set($top, 'by_number', {number => 4}) },
+    undef, 'Added first slave object to by_number set');
+  is(exception { $db->add_to_set($top, 'by_number', {number => 2}) },
+    undef, 'Added second slave object to by_number set');
+  cmp_deeply(
+    $db->fetch_set($top, 'by_number'),
+    [ { d => {
+          number => 2,
+          sorted_sets_by_number_set =>
+            {pk => $top->{pk}, type => $top->{type}}
+        },
+        oid  => re(qr{^\d+$}),
+        pk   => re(qr{^[A-F0-9-]{36}$}),
+        type => 'slava'
+      },
+      { d => {
+          number => 4,
+          sorted_sets_by_number_set =>
+            {pk => $top->{pk}, type => $top->{type}}
+        },
+        oid  => re(qr{^\d+$}),
+        pk   => re(qr{^[A-F0-9-]{36}$}),
+        type => 'slava'
+      },
+    ],
+    'Set returned by order ok'
+  );
+
+  ## order by string
+  cmp_deeply($db->fetch_set($top, 'by_string'), [], 'Empty set');
+  is(exception { $db->add_to_set($top, 'by_string', {string => 'bbb'}) },
+    undef, 'Added first slave object to by_string set');
+  is(exception { $db->add_to_set($top, 'by_string', {string => 'aaa'}) },
+    undef, 'Added second slave object to by_string set');
+  cmp_deeply(
+    $db->fetch_set($top, 'by_string'),
+    [ { d => {
+          string => 'aaa',
+          sorted_sets_by_string_set =>
+            {pk => $top->{pk}, type => $top->{type}}
+        },
+        oid  => re(qr{^\d+$}),
+        pk   => re(qr{^[A-F0-9-]{36}$}),
+        type => 'slava'
+      },
+      { d => {
+          string => 'bbb',
+          sorted_sets_by_string_set =>
+            {pk => $top->{pk}, type => $top->{type}}
+        },
+        oid  => re(qr{^\d+$}),
+        pk   => re(qr{^[A-F0-9-]{36}$}),
+        type => 'slava'
+      },
+    ],
+    'Set returned by order ok'
+  );
+
+  ## order by date
+  cmp_deeply($db->fetch_set($top, 'by_date'), [], 'Empty set');
+  is(exception { $db->add_to_set($top, 'by_date', {date => '2011/01/01'}) },
+    undef, 'Added first slave object to by_date set');
+  is(exception { $db->add_to_set($top, 'by_date', {date => '2010/01/01'}) },
+    undef, 'Added second slave object to by_date set');
+  cmp_deeply(
+    $db->fetch_set($top, 'by_date'),
+    [ { d => {
+          date                    => '2010/01/01',
+          sorted_sets_by_date_set => {pk => $top->{pk}, type => $top->{type}}
+        },
+        oid  => re(qr{^\d+$}),
+        pk   => re(qr{^[A-F0-9-]{36}$}),
+        type => 'slava'
+      },
+      { d => {
+          date                    => '2011/01/01',
+          sorted_sets_by_date_set => {pk => $top->{pk}, type => $top->{type}}
+        },
+        oid  => re(qr{^\d+$}),
+        pk   => re(qr{^[A-F0-9-]{36}$}),
+        type => 'slava'
+      },
+    ],
+    'Set returned by order ok'
+  );
+
+  ## order by datetime
+  cmp_deeply($db->fetch_set($top, 'by_datetime'), [], 'Empty set');
+  is(
+    exception {
+      $db->add_to_set($top, 'by_datetime',
+        {datetime => '2011/01/01 01:00:00'});
+    },
+    undef,
+    'Added first slave object to by_datetime set'
+  );
+  is(
+    exception {
+      $db->add_to_set($top, 'by_datetime',
+        {datetime => '2011/01/01 00:59:59'});
+    },
+    undef,
+    'Added second slave object to by_datetime set'
+  );
+  cmp_deeply(
+    $db->fetch_set($top, 'by_datetime'),
+    [ { d => {
+          datetime => '2011/01/01 00:59:59',
+          sorted_sets_by_datetime_set =>
+            {pk => $top->{pk}, type => $top->{type}}
+        },
+        oid  => re(qr{^\d+$}),
+        pk   => re(qr{^[A-F0-9-]{36}$}),
+        type => 'slava'
+      },
+      { d => {
+          datetime => '2011/01/01 01:00:00',
+          sorted_sets_by_datetime_set =>
+            {pk => $top->{pk}, type => $top->{type}}
+        },
+        oid  => re(qr{^\d+$}),
+        pk   => re(qr{^[A-F0-9-]{36}$}),
+        type => 'slava'
+      },
+    ],
+    'Set returned by order ok'
+  );
 };
 
 
