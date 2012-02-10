@@ -78,7 +78,7 @@ subtest 'sets' => sub {
     '... and return the set spec information properly'
   );
 
-  $db->deploy_set_tables;
+  $db->deploy;
   my ($master, $slave);
   is(exception { $master = $db->create(mt => {m => 1}) },
     undef, 'Created object for type mt');

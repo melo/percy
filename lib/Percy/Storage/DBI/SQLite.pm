@@ -10,37 +10,48 @@ use namespace::clean;
 extends 'Percy::Storage::DBI';
 
 
-sub _deploy_obj_storage_table {
-  my ($self) = @_;
+sub _generate_table_stmts {
+  my ($self, $table) = @_;
+  my @sql_stmts;
 
-  $self->_deploy_table('
-    CREATE TABLE IF NOT EXISTS obj_storage (
-      oid        INTEGER  NOT NULL
-          CONSTRAINT obj_storage_pk PRIMARY KEY AUTOINCREMENT,
+  ## Table
+  my $skip_pk;
+  my $tn  = $table->{name};
+  my $tbl = "CREATE TABLE IF NOT EXISTS $tn (\n";
+  for my $f (@{$table->{fields}}) {
+    $tbl .= ",\n" if $skip_pk;
+    $tbl .= "  $f->{name}  $f->{type}";
+    if ($f->{is_auto_increment}) {
+      $tbl .= "\n      CONSTRAINT ${tn}_pk PRIMARY KEY AUTOINCREMENT";
+      $skip_pk++;
+    }
+    $tbl .= ",\n" unless $skip_pk;
+  }
 
-      pk         VARCHAR(64) NOT NULL,
-      type       VARCHAR(64) NOT NULL,
+  if (!$skip_pk) {
+    $tbl .= "\n  CONSTRAINT ${tn}_pk PRIMARY KEY ("
+      . join(', ', @{$table->{pk}}) . ")\n";
+  }
+  $tbl .= ')';
+  push @sql_stmts, $tbl;
 
-      data       BLOB        NOT NULL,
+  ## Indexes
+  while (my ($in, $if) = each %{$table->{indexes} || {}}) {
+    push @sql_stmts,
+        "CREATE INDEX IF NOT EXISTS ${tn}_${in}_idx"
+      . " ON $tn ("
+      . join(', ', @$if) . ")";
+  }
 
-      CONSTRAINT obj_storage_pk_type_un UNIQUE (pk, type)
-    )
-  ');
+  ## Unique keys
+  while (my ($un, $uf) = each %{$table->{unique} || {}}) {
+    push @sql_stmts,
+        "CREATE UNIQUE INDEX IF NOT EXISTS ${tn}_${un}_un"
+      . " ON $tn ("
+      . join(', ', @$uf) . ")";
+  }
+
+  return \@sql_stmts;
 }
-
-sub _deploy_set_table {
-  my ($self, $set_spec) = @_;
-
-  my $sn = $set_spec->{set_name};
-  $self->_deploy_table("
-    CREATE TABLE IF NOT EXISTS $sn (
-      m_oid        INTEGER NOT NULL,
-      s_oid        INTEGER NOT NULL,
-
-      CONSTRAINT ${sn}_pk PRIMARY KEY (m_oid, s_oid)
-    )
-  ");
-}
-
 
 1;

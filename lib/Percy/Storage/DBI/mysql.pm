@@ -10,36 +10,34 @@ use namespace::clean;
 extends 'Percy::Storage::DBI';
 
 
-sub _deploy_obj_storage_table {
-  my ($self) = @_;
+sub _generate_table_stmts {
+  my ($self, $table) = @_;
+  my @sql_stmts;
 
-  $self->_deploy_table('
-    CREATE TABLE IF NOT EXISTS obj_storage (
-      oid         INTEGER NOT NULL AUTO_INCREMENT,
+  ## Table
+  my $tn  = $table->{name};
+  my $tbl = "CREATE TABLE IF NOT EXISTS $tn (\n";
+  for my $f (@{$table->{fields}}) {
+    $tbl .= "  $f->{name}  $f->{type}";
+    $tbl .= " AUTO_INCREMENT" if $f->{is_auto_increment};
+    $tbl .= ",\n";
+  }
+  $tbl .= "\n  CONSTRAINT ${tn}_pk PRIMARY KEY ("
+    . join(', ', @{$table->{pk}}) . ")";
 
-      pk         VARBINARY(64) NOT NULL,
-      type       VARBINARY(64) NOT NULL,
+  ## Indexes
+  while (my ($in, $if) = each %{$table->{indexes} || {}}) {
+    $tbl .= ",\n  INDEX ${tn}_${in}_idx (" . join(', ', @$if) . ")";
+  }
 
-      data       BLOB        NOT NULL,
+  ## Unique keys
+  while (my ($un, $uf) = each %{$table->{unique} || {}}) {
+    $tbl
+      .= ",\n  CONSTRAINT ${tn}_${un}_un UNIQUE (" . join(', ', @$uf) . ")";
+  }
+  $tbl .= "\n) ENGINE = InnoDB\n";
 
-      CONSTRAINT obj_storage_pk PRIMARY KEY (oid),
-      CONSTRAINT obj_storage_pk_type_un UNIQUE (pk, type)
-    ) ENGINE = InnoDB
-  ');
-}
-
-sub _deploy_set_table {
-  my ($self, $set_spec) = @_;
-
-  my $sn = $set_spec->{set_name};
-  $self->_deploy_table("
-    CREATE TABLE IF NOT EXISTS $sn (
-      m_oid        INTEGER NOT NULL,
-      s_oid        INTEGER NOT NULL,
-
-      CONSTRAINT ${sn}_pk PRIMARY KEY (m_oid, s_oid)
-    ) ENGINE = InnoDB
-  ");
+  return [$tbl];
 }
 
 1;

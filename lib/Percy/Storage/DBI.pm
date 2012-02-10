@@ -382,44 +382,94 @@ sub _tx_rollback { $_[0]->dbh->rollback }
 sub deploy {
   my $self = shift;
 
-  $self->_deploy_obj_storage_table(@_);
-  $self->deploy_set_tables(@_);
+  my $stms1 = $self->_collect_obj_storage_table_stmts(@_);
+  my $stms2 = $self->_collect_all_set_tables_stmts(@_);
+
+  $self->_deploy_exec_sql_stmts(@$stms1, @$stms2);
 }
 
-sub deploy_set_tables {
+sub _generate_table_stmts {
+  my $class = ref($_[0]) || $_[0];
+
+  die "FATAL: redefine the _generate_table_stmts() method in '$class',";
+}
+
+sub _collect_obj_storage_table_stmts {
+  my ($self) = @_;
+
+  my $table = {
+    name   => 'obj_storage',
+    fields => [
+      { name              => 'oid',
+        type              => 'INTEGER NOT NULL',
+        is_auto_increment => 1,
+      },
+      { name => 'pk',
+        type => 'VARCHAR(64) NOT NULL',
+      },
+      { name => 'type',
+        type => 'VARCHAR(64) NOT NULL',
+      },
+      { name => 'data',
+        type => 'BLOB NOT NULL',
+      },
+    ],
+    pk     => ['pk'],
+    unique => {pk_type => [qw(pk type)]},
+  };
+
+  return $self->_generate_table_stmts($table);
+}
+
+sub _collect_all_set_tables_stmts {
   my $self = shift;
   my $sets = $self->schema->sets;
 
+  my @stmts;
   for my $spec (sort { $a->{set_name} cmp $b->{set_name} } values %$sets) {
-    $self->_deploy_set_table($spec, @_);
+    my $set_stmts = $self->_collect_set_table_stmts($spec, @_);
+    push @stmts, @$set_stmts;
   }
+
+  return \@stmts;
 }
 
-sub _deploy_obj_storage_table {
-  my $class = ref($_[0]) || $_[0];
-
-  die "FATAL: redefine the _deploy_obj_storage_table() method in '$class',";
-}
-
-sub _deploy_set_table {
+sub _collect_set_table_stmts {
   my ($self, $set_spec) = @_;
-
   my $sn = $set_spec->{set_name};
-  $self->_deploy_table("
-    CREATE TABLE IF NOT EXISTS $sn (
-      m_oid        INTEGER NOT NULL,
-      s_oid        INTEGER NOT NULL,
 
-      CONSTRAINT ${sn}_pk PRIMARY KEY (m_oid, s_oid)
-    )
-  ");
+  my $table = {
+    name   => $sn,
+    fields => [
+      { name => 'm_oid',
+        type => 'INTEGER NOT NULL',
+      },
+      { name => 's_oid',
+        type => 'INTEGER NOT NULL',
+      },
+    ],
+    pk => [qw(m_oid s_oid)],
+  };
+
+  if (my $order = $set_spec->{sorted_by}) {
+    my $type = $order->{type} || 'Integer';
+    my $field = lc("f_$order->{type}");
+    $type = 'VARCHAR(100)' if $type eq 'String';
+    $type = uc($type);
+
+    push @{$table->{fields}}, {name => $field, type => "$type NOT NULL"};
+    $table->{indexes}{$sn} = ['m_oid', $field];
+  }
+
+  return $self->_generate_table_stmts($table);
 }
 
-sub _deploy_table {
-  my ($self, $sql) = @_;
+sub _deploy_exec_sql_stmts {
+  my $self = shift;
 
   if (my $spec = $ENV{PERCY_DEPLOY_SQL_DUMP}) {
-    $sql =~ s/\A\s+|\s+\Z//gsm;
+    my $sql = join(";\n\n", map { s/\A\s+|\s+\Z//gsm; $_ } @_);
+
     if (my ($fn) = $spec =~ m/^=(.+)$/) {
       open(my $fh, '>>', $fn)
         or die "FATAL: Could not open deploy SQL dump file '$fn': $!,";
@@ -431,7 +481,10 @@ sub _deploy_table {
     }
   }
   else {
-    $self->dbh->do($sql);
+    for my $stmt (@_) {
+      eval { $self->dbh->do($stmt) };
+      die "FATAL: SQL deploy failed: $stmt - $@\n" if $@;
+    }
   }
 }
 
