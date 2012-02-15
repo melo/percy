@@ -13,17 +13,23 @@ extends 'Percy::Storage::DBI';
 sub _generate_table_stmts {
   my ($self, $table) = @_;
   my @sql_stmts;
+  my $pks = $table->{pk} || [];
 
   ## Table
   my $tn  = $table->{name};
   my $tbl = "CREATE TABLE IF NOT EXISTS $tn (\n";
+
+  my @fields;
   for my $f (@{$table->{fields}}) {
-    $tbl .= "  $f->{name}  $f->{type}";
-    $tbl .= " AUTO_INCREMENT" if $f->{is_auto_increment};
-    $tbl .= ",\n";
+    push @fields, "  $f->{name}  $f->{type}";
+    $fields[-1] .= " PRIMARY KEY AUTO_INCREMENT" if $f->{is_auto_increment};
   }
-  $tbl .= "\n  CONSTRAINT ${tn}_pk PRIMARY KEY ("
-    . join(', ', @{$table->{pk}}) . ")";
+  $tbl .= join(",\n", @fields);
+
+  if (@$pks > 1) {
+    $tbl .= ",\n\n  CONSTRAINT ${tn}_pk PRIMARY KEY ("
+      . join(', ', @{$table->{pk}}) . ")";
+  }
 
   ## Indexes
   while (my ($in, $if) = each %{$table->{indexes} || {}}) {
