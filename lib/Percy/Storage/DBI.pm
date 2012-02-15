@@ -17,7 +17,7 @@ has '_dbh' => (is => 'rw');
 ## DB Operations
 sub fetch {
   my $self = shift;
-  my $r = _parse_args('fetch', @_, 'no_data');
+  my $r = _parse_args($self, 'fetch', @_, {});
 
   my $spec;
   if (my $type = $r->{type}) {
@@ -29,12 +29,7 @@ sub fetch {
   my @data = _dbi_fetch_obj($dbh, $r);
   return unless @data;
 
-  $spec = _type_spec_for($self, $data[1]);
-
-  $r->{oid}  = $data[0];
-  $r->{type} = $data[1];
-  $r->{pk}   = $data[2];
-  $r->{d}    = $spec->decode_from_db($self, $data[3]);
+  ($r, $spec) = $self->build_doc(@data);
 
   $spec->after_fetch($self, $r);
 
@@ -50,12 +45,7 @@ sub create {
     sub {
       my ($me, $dbh) = @_;
 
-      $r = {
-        d    => $data,
-        pk   => $pk,
-        oid  => undef,
-        type => $type,
-      };
+      $r = $self->build_doc(undef, $type, $pk, $data);
 
       $pk = $r->{pk} = $spec->generate_id($self, $r)
         unless defined $pk;
@@ -78,7 +68,7 @@ sub create {
 
 sub update {
   my $self = shift;
-  my $r = _parse_args('update', @_);
+  my $r = _parse_args($self, 'update', @_);
 
   my $rows;
   $self->tx(
@@ -105,7 +95,7 @@ sub update {
 
 sub delete {
   my $self = shift;
-  my $r = _parse_args('delete', @_, 'no data');
+  my $r = _parse_args($self, 'delete', @_, {});
 
   my $rows;
   $self->tx(
@@ -228,19 +218,19 @@ sub delete_from_set {
 
 ## Parser for parameters
 sub _parse_args {
-  my ($meth, $a1, $a2, $a3) = @_;
+  my ($self, $meth, $a1, $a2, $a3) = @_;
 
   die "FATAL: invalid arguments to $meth()," unless defined($a1);
 
   # method($type => $pk => $data)
-  return {type => $a1, pk => $a2, d => $a3}
+  return $self->build_doc(undef, $a1, $a2, $a3)
     if defined($a2) && defined($a3);
 
   # method($r)
   return $a1 if ref($a1);
 
   # method($oid => $data)
-  return {oid => $a1, d => $a2} if defined($a2);
+  return $self->build_doc($a1, undef, undef, $a2) if defined($a2);
 
   die "FATAL: Could not parse arguments for '$meth',";
 }
@@ -342,6 +332,25 @@ sub connect {
   $class = $driver_class if Class::Load::try_load_class($driver_class);
 
   return $class->new(_dbh => $dbh, schema => $schema);
+}
+
+sub build_doc {
+  my ($self, $oid, $type, $pk, $data) = @_;
+  my %r;
+
+  my $spec;
+  if (!ref($data)) {
+    $spec = _type_spec_for($self, $type);
+    $data = $spec->decode_from_db($self, $data);
+  }
+
+  $r{oid}  = $oid;
+  $r{type} = $type;
+  $r{pk}   = $pk;
+  $r{d}    = $data;
+
+  return (\%r, $spec) if wantarray;
+  return \%r;
 }
 
 
