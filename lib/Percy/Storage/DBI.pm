@@ -159,7 +159,7 @@ sub fetch_set {
   return $set_elems;
 }
 
-sub add_to_set {
+sub create_into_set {
   my ($self, $master, $set, $slave, $pk) = @_;
   my $schema   = $self->schema;
   my $set_spec = $schema->set_spec($master, $set);

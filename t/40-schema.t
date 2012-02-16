@@ -106,7 +106,7 @@ subtest 'sets' => sub {
   my ($master, $slave);
   is(exception { $master = $db->create(mt => {m => 1}) },
     undef, 'Created object for type mt');
-  is(exception { $slave = $db->add_to_set($master, 'sn', {slv => 42}) },
+  is(exception { $slave = $db->create_into_set($master, 'sn', {slv => 42}) },
     undef, '... added slave to set');
 
   my $slave_copy = $db->fetch($slave);
@@ -127,7 +127,7 @@ subtest 'sets' => sub {
   cmp_deeply($set_elems, [$slave], '... expected elements returned');
 
   my $slave2;
-  is(exception { $slave2 = $db->add_to_set($master, 'sn', {slv => 84}, 'my_super_pk') },
+  is(exception { $slave2 = $db->create_into_set($master, 'sn', {slv => 84}, 'my_super_pk') },
     undef, '... added another slave to set, with slave pk');
   is($slave2->{pk}, 'my_super_pk', '... found expected pk for slave');
 
@@ -163,9 +163,9 @@ subtest 'sets ordered' => sub {
 
   ## order by number
   cmp_deeply($db->fetch_set($top, 'by_number'), [], 'Empty set');
-  is(exception { $db->add_to_set($top, 'by_number', {number => 4}) },
+  is(exception { $db->create_into_set($top, 'by_number', {number => 4}) },
     undef, 'Added first slave object to by_number set');
-  is(exception { $db->add_to_set($top, 'by_number', {number => 2}) },
+  is(exception { $db->create_into_set($top, 'by_number', {number => 2}) },
     undef, 'Added second slave object to by_number set');
   cmp_deeply(
     $db->fetch_set($top, 'by_number'),
@@ -193,9 +193,9 @@ subtest 'sets ordered' => sub {
 
   ## order by string
   cmp_deeply($db->fetch_set($top, 'by_string'), [], 'Empty set');
-  is(exception { $db->add_to_set($top, 'by_string', {string => 'bbb'}) },
+  is(exception { $db->create_into_set($top, 'by_string', {string => 'bbb'}) },
     undef, 'Added first slave object to by_string set');
-  is(exception { $db->add_to_set($top, 'by_string', {string => 'aaa'}) },
+  is(exception { $db->create_into_set($top, 'by_string', {string => 'aaa'}) },
     undef, 'Added second slave object to by_string set');
   cmp_deeply(
     $db->fetch_set($top, 'by_string'),
@@ -223,9 +223,9 @@ subtest 'sets ordered' => sub {
 
   ## order by date
   cmp_deeply($db->fetch_set($top, 'by_date'), [], 'Empty set');
-  is(exception { $db->add_to_set($top, 'by_date', {date => '2011/01/01'}) },
+  is(exception { $db->create_into_set($top, 'by_date', {date => '2011/01/01'}) },
     undef, 'Added first slave object to by_date set');
-  is(exception { $db->add_to_set($top, 'by_date', {date => '2010/01/01'}) },
+  is(exception { $db->create_into_set($top, 'by_date', {date => '2010/01/01'}) },
     undef, 'Added second slave object to by_date set');
   cmp_deeply(
     $db->fetch_set($top, 'by_date'),
@@ -253,7 +253,7 @@ subtest 'sets ordered' => sub {
   cmp_deeply($db->fetch_set($top, 'by_datetime'), [], 'Empty set');
   is(
     exception {
-      $db->add_to_set($top, 'by_datetime',
+      $db->create_into_set($top, 'by_datetime',
         {datetime => '2011/01/01 01:00:00'});
     },
     undef,
@@ -261,7 +261,7 @@ subtest 'sets ordered' => sub {
   );
   is(
     exception {
-      $db->add_to_set($top, 'by_datetime',
+      $db->create_into_set($top, 'by_datetime',
         {datetime => '2011/01/01 00:59:59'});
     },
     undef,
