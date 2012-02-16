@@ -159,12 +159,14 @@ subtest 'sets ordered' => sub {
   my $si  = test_percy_schema();
   my $db  = $si->db;
   my $top = $db->create(sorted_sets => {});
+  my $ch2;
 
   ## order by number
   cmp_deeply($db->fetch_set($top, 'by_number'), [], 'Empty set');
   is(exception { $db->create_into_set($top, 'by_number', {number => 4}) },
-    undef, 'Added first slave object to by_number set');
-  is(exception { $db->create_into_set($top, 'by_number', {number => 2}) },
+    undef, 'Created first slave object into by_number set');
+  $ch2 = $db->create(slava => {number => 2});
+  is(exception { $db->add_to_set($top, 'by_number', $ch2) },
     undef, 'Added second slave object to by_number set');
   cmp_deeply(
     $db->fetch_set($top, 'by_number'),
@@ -187,13 +189,11 @@ subtest 'sets ordered' => sub {
   is(
     exception { $db->create_into_set($top, 'by_string', {string => 'bbb'}) },
     undef,
-    'Added first slave object to by_string set'
+    'Created first slave object into by_string set'
   );
-  is(
-    exception { $db->create_into_set($top, 'by_string', {string => 'aaa'}) },
-    undef,
-    'Added second slave object to by_string set'
-  );
+  $ch2 = $db->create(slava => {string => 'aaa'});
+  is(exception { $db->add_to_set($top, 'by_string', $ch2) },
+    undef, 'Added second slave object to by_string set');
   cmp_deeply(
     $db->fetch_set($top, 'by_string'),
     [ { d    => {string => 'aaa'},
@@ -217,15 +217,11 @@ subtest 'sets ordered' => sub {
       $db->create_into_set($top, 'by_date', {date => '2011/01/01'});
     },
     undef,
-    'Added first slave object to by_date set'
+    'Created first slave object into by_date set'
   );
-  is(
-    exception {
-      $db->create_into_set($top, 'by_date', {date => '2010/01/01'});
-    },
-    undef,
-    'Added second slave object to by_date set'
-  );
+  $ch2 = $db->create(slava => {date => '2010/01/01'});
+  is(exception { $db->add_to_set($top, 'by_date', $ch2) },
+    undef, 'Added second slave object to by_date set');
   cmp_deeply(
     $db->fetch_set($top, 'by_date'),
     [ { d    => {date => '2010/01/01'},
@@ -250,16 +246,11 @@ subtest 'sets ordered' => sub {
         {datetime => '2011/01/01 01:00:00'});
     },
     undef,
-    'Added first slave object to by_datetime set'
+    'Created first slave object into by_datetime set'
   );
-  is(
-    exception {
-      $db->create_into_set($top, 'by_datetime',
-        {datetime => '2011/01/01 00:59:59'});
-    },
-    undef,
-    'Added second slave object to by_datetime set'
-  );
+  $ch2 = $db->create(slava => {datetime => '2011/01/01 00:59:59'});
+  is(exception { $db->add_to_set($top, 'by_datetime', $ch2) },
+    undef, 'Added second slave object to by_datetime set');
   cmp_deeply(
     $db->fetch_set($top, 'by_datetime'),
     [ { d    => {datetime => '2011/01/01 00:59:59'},

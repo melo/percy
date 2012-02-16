@@ -159,35 +159,51 @@ sub fetch_set {
   return $set_elems;
 }
 
-sub create_into_set {
-  my ($self, $master, $set, $slave, $pk) = @_;
-  my $schema   = $self->schema;
-  my $set_spec = $schema->set_spec($master, $set);
-  my $set_name = $set_spec->{set_name};
+sub add_to_set {
+  my ($self, $master, $set, $slave) = @_;
 
   $self->tx(
     sub {
-      my ($si, $dbh) = @_;
-
-      $slave = $self->create($set_spec->{slave} => $slave => $pk);
-
-      if (my $sb = $set_spec->{sorted_by}) {
-        my $field = lc("f_$sb->{type}");
-        $dbh->do("
-          INSERT INTO $set_name (m_oid, s_oid, $field) VALUES (?, ?, ?)
-        ", undef, $master->{oid}, $slave->{oid},
-          $sb->{field}->($self, $slave));
-
-      }
-      else {
-        $dbh->do("
-          INSERT INTO $set_name (m_oid, s_oid) VALUES (?, ?)
-        ", undef, $master->{oid}, $slave->{oid});
-      }
+      my $set_spec = $self->schema->set_spec($master, $set);
+      $self->_associate_slave_to_set($_[1], $master, $set_spec, $slave);
     }
   );
 
   return $slave;
+}
+
+sub create_into_set {
+  my ($self, $master, $set, $slave, $pk) = @_;
+
+  $self->tx(
+    sub {
+      my $set_spec = $self->schema->set_spec($master, $set);
+
+      $slave = $self->create($set_spec->{slave} => $slave => $pk);
+      $self->_associate_slave_to_set($_[1], $master, $set_spec, $slave);
+    }
+  );
+
+  return $slave;
+}
+
+sub _associate_slave_to_set {
+  my ($self, $dbh, $master, $set_spec, $slave) = @_;
+  my $set_name = $set_spec->{set_name};
+
+  if (my $sb = $set_spec->{sorted_by}) {
+    my $field = lc("f_$sb->{type}");
+    $dbh->do("
+      INSERT INTO $set_name (m_oid, s_oid, $field) VALUES (?, ?, ?)
+    ", undef, $master->{oid}, $slave->{oid},
+      $sb->{field}->($self, $slave));
+
+  }
+  else {
+    $dbh->do("
+      INSERT INTO $set_name (m_oid, s_oid) VALUES (?, ?)
+    ", undef, $master->{oid}, $slave->{oid});
+  }
 }
 
 sub delete_from_set {
