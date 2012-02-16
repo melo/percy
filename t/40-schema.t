@@ -127,8 +127,9 @@ subtest 'sets' => sub {
   cmp_deeply($set_elems, [$slave], '... expected elements returned');
 
   my $slave2;
-  is(exception { $slave2 = $db->add_to_set($master, 'sn', {slv => 84}) },
-    undef, '... added another slave to set');
+  is(exception { $slave2 = $db->add_to_set($master, 'sn', {slv => 84}, 'my_super_pk') },
+    undef, '... added another slave to set, with slave pk');
+  is($slave2->{pk}, 'my_super_pk', '... found expected pk for slave');
 
   is(exception { $set_elems = $db->fetch_set($master, 'sn') },
     undef, 'Called fetch_set() without problems');

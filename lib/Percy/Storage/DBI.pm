@@ -160,7 +160,7 @@ sub fetch_set {
 }
 
 sub add_to_set {
-  my ($self, $master, $set, $slave) = @_;
+  my ($self, $master, $set, $slave, $pk) = @_;
   my $schema   = $self->schema;
   my $set_spec = $schema->set_spec($master, $set);
   my $set_name = $set_spec->{set_name};
@@ -174,7 +174,7 @@ sub add_to_set {
     sub {
       my ($si, $dbh) = @_;
 
-      $slave = $self->create($set_spec->{slave} => $slave);
+      $slave = $self->create($set_spec->{slave} => $slave => $pk);
 
       if (my $sb = $set_spec->{sorted_by}) {
         my $field = lc("f_$sb->{type}");
