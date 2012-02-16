@@ -111,14 +111,7 @@ subtest 'sets' => sub {
 
   my $slave_copy = $db->fetch($slave);
   ok($slave_copy, 'Got copy of slave object');
-  cmp_deeply(
-    $slave_copy->{d},
-    { slv => 42,
-      $si->set_name($master, 'sn'),
-      {pk => $master->{pk}, type => $master->{type}}
-    },
-    '... created slave has link to parent'
-  );
+  cmp_deeply($slave_copy->{d}, {slv => 42}, '... with the expected content');
 
   my $set_elems;
   is(exception { $set_elems = $db->fetch_set($master, 'sn') },
@@ -127,8 +120,14 @@ subtest 'sets' => sub {
   cmp_deeply($set_elems, [$slave], '... expected elements returned');
 
   my $slave2;
-  is(exception { $slave2 = $db->create_into_set($master, 'sn', {slv => 84}, 'my_super_pk') },
-    undef, '... added another slave to set, with slave pk');
+  is(
+    exception {
+      $slave2 =
+        $db->create_into_set($master, 'sn', {slv => 84}, 'my_super_pk');
+    },
+    undef,
+    '... added another slave to set, with slave pk'
+  );
   is($slave2->{pk}, 'my_super_pk', '... found expected pk for slave');
 
   is(exception { $set_elems = $db->fetch_set($master, 'sn') },
@@ -169,20 +168,12 @@ subtest 'sets ordered' => sub {
     undef, 'Added second slave object to by_number set');
   cmp_deeply(
     $db->fetch_set($top, 'by_number'),
-    [ { d => {
-          number => 2,
-          sorted_sets_by_number_set =>
-            {pk => $top->{pk}, type => $top->{type}}
-        },
+    [ { d    => {number => 2},
         oid  => re(qr{^\d+$}),
         pk   => re(qr{^[A-F0-9-]{36}$}),
         type => 'slava'
       },
-      { d => {
-          number => 4,
-          sorted_sets_by_number_set =>
-            {pk => $top->{pk}, type => $top->{type}}
-        },
+      { d    => {number => 4},
         oid  => re(qr{^\d+$}),
         pk   => re(qr{^[A-F0-9-]{36}$}),
         type => 'slava'
@@ -193,26 +184,24 @@ subtest 'sets ordered' => sub {
 
   ## order by string
   cmp_deeply($db->fetch_set($top, 'by_string'), [], 'Empty set');
-  is(exception { $db->create_into_set($top, 'by_string', {string => 'bbb'}) },
-    undef, 'Added first slave object to by_string set');
-  is(exception { $db->create_into_set($top, 'by_string', {string => 'aaa'}) },
-    undef, 'Added second slave object to by_string set');
+  is(
+    exception { $db->create_into_set($top, 'by_string', {string => 'bbb'}) },
+    undef,
+    'Added first slave object to by_string set'
+  );
+  is(
+    exception { $db->create_into_set($top, 'by_string', {string => 'aaa'}) },
+    undef,
+    'Added second slave object to by_string set'
+  );
   cmp_deeply(
     $db->fetch_set($top, 'by_string'),
-    [ { d => {
-          string => 'aaa',
-          sorted_sets_by_string_set =>
-            {pk => $top->{pk}, type => $top->{type}}
-        },
+    [ { d    => {string => 'aaa'},
         oid  => re(qr{^\d+$}),
         pk   => re(qr{^[A-F0-9-]{36}$}),
         type => 'slava'
       },
-      { d => {
-          string => 'bbb',
-          sorted_sets_by_string_set =>
-            {pk => $top->{pk}, type => $top->{type}}
-        },
+      { d    => {string => 'bbb'},
         oid  => re(qr{^\d+$}),
         pk   => re(qr{^[A-F0-9-]{36}$}),
         type => 'slava'
@@ -223,24 +212,28 @@ subtest 'sets ordered' => sub {
 
   ## order by date
   cmp_deeply($db->fetch_set($top, 'by_date'), [], 'Empty set');
-  is(exception { $db->create_into_set($top, 'by_date', {date => '2011/01/01'}) },
-    undef, 'Added first slave object to by_date set');
-  is(exception { $db->create_into_set($top, 'by_date', {date => '2010/01/01'}) },
-    undef, 'Added second slave object to by_date set');
+  is(
+    exception {
+      $db->create_into_set($top, 'by_date', {date => '2011/01/01'});
+    },
+    undef,
+    'Added first slave object to by_date set'
+  );
+  is(
+    exception {
+      $db->create_into_set($top, 'by_date', {date => '2010/01/01'});
+    },
+    undef,
+    'Added second slave object to by_date set'
+  );
   cmp_deeply(
     $db->fetch_set($top, 'by_date'),
-    [ { d => {
-          date                    => '2010/01/01',
-          sorted_sets_by_date_set => {pk => $top->{pk}, type => $top->{type}}
-        },
+    [ { d    => {date => '2010/01/01'},
         oid  => re(qr{^\d+$}),
         pk   => re(qr{^[A-F0-9-]{36}$}),
         type => 'slava'
       },
-      { d => {
-          date                    => '2011/01/01',
-          sorted_sets_by_date_set => {pk => $top->{pk}, type => $top->{type}}
-        },
+      { d    => {date => '2011/01/01'},
         oid  => re(qr{^\d+$}),
         pk   => re(qr{^[A-F0-9-]{36}$}),
         type => 'slava'
@@ -269,20 +262,12 @@ subtest 'sets ordered' => sub {
   );
   cmp_deeply(
     $db->fetch_set($top, 'by_datetime'),
-    [ { d => {
-          datetime => '2011/01/01 00:59:59',
-          sorted_sets_by_datetime_set =>
-            {pk => $top->{pk}, type => $top->{type}}
-        },
+    [ { d    => {datetime => '2011/01/01 00:59:59'},
         oid  => re(qr{^\d+$}),
         pk   => re(qr{^[A-F0-9-]{36}$}),
         type => 'slava'
       },
-      { d => {
-          datetime => '2011/01/01 01:00:00',
-          sorted_sets_by_datetime_set =>
-            {pk => $top->{pk}, type => $top->{type}}
-        },
+      { d    => {datetime => '2011/01/01 01:00:00'},
         oid  => re(qr{^\d+$}),
         pk   => re(qr{^[A-F0-9-]{36}$}),
         type => 'slava'

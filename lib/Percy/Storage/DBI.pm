@@ -165,11 +165,6 @@ sub create_into_set {
   my $set_spec = $schema->set_spec($master, $set);
   my $set_name = $set_spec->{set_name};
 
-  $slave->{$set_name} = {
-    pk   => $master->{pk},
-    type => $master->{type},
-  };
-
   $self->tx(
     sub {
       my ($si, $dbh) = @_;
