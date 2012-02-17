@@ -8,6 +8,7 @@ use Percy::Object;
 use Class::Load ();
 use Try::Tiny;
 use Guard 'guard';
+use Carp ();
 use namespace::clean;
 
 extends 'Percy::Storage';
@@ -49,7 +50,7 @@ sub create {
 
       $pk = $r->{pk} = $spec->generate_id($self, $r)
         unless defined $pk;
-      die "FATAL: failed to generate an PK for type '$type',"
+      Carp::confess("FATAL: failed to generate an PK for type '$type',")
         unless defined $pk;
 
       $spec->before_change($self, $r, 'create');
@@ -231,7 +232,7 @@ sub delete_from_set {
 sub _parse_args {
   my ($self, $meth, $a1, $a2, $a3) = @_;
 
-  die "FATAL: invalid arguments to $meth()," unless defined($a1);
+  Carp::confess("FATAL: invalid arguments to $meth(),") unless defined($a1);
 
   # method($type => $pk => $data)
   return $self->build_doc(undef, $a1, $a2, $a3)
@@ -243,7 +244,7 @@ sub _parse_args {
   # method($oid => $data)
   return $self->build_doc($a1, undef, undef, $a2) if defined($a2);
 
-  die "FATAL: Could not parse arguments for '$meth',";
+  Carp::confess("FATAL: Could not parse arguments for '$meth',");
 }
 
 
@@ -303,7 +304,7 @@ sub _dbi_obj_where {
   return ("$sql WHERE oid=?", $r->{oid}) if defined $r->{oid};
   return ("$sql WHERE type=? AND pk=?", $r->{type}, $r->{pk})
     if defined $r->{type} && defined $r->{pk};
-  die "FATAL: insufficient conditions to identify a specific object,";
+  Carp::confess("FATAL: insufficient conditions to identify a specific object,");
 }
 
 sub _type_fetch {
@@ -326,9 +327,10 @@ sub _type_fetch {
 ## Shortcuts to the Schema type registry
 sub _type_spec_for {
   my ($self, $type) = @_;
+  Carp::confess("FATAL: undefined type") unless defined $type;
 
   my $spec = $self->schema->type_spec($type);
-  die "FATAL: type '$type' not registered," unless defined $spec;
+  Carp::confess "FATAL: type '$type' not registered," unless defined $spec;
 
   return $spec;
 }
@@ -427,7 +429,7 @@ sub deploy {
 sub _generate_table_stmts {
   my $class = ref($_[0]) || $_[0];
 
-  die "FATAL: redefine the _generate_table_stmts() method in '$class',";
+  Carp::confess("FATAL: redefine the _generate_table_stmts() method in '$class',");
 }
 
 sub _collect_obj_storage_table_stmts {
