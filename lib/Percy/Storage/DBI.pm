@@ -514,7 +514,7 @@ sub _deploy_exec_sql_stmts {
   my $self = shift;
 
   if (my $spec = $ENV{PERCY_DEPLOY_SQL_DUMP}) {
-    my $sql = join(";\n\n", map { s/\A\s+|\s+\Z//gsm; $_ } @_);
+    my $sql = join(";\n\n", map { s/\A\s+|\s+\Z//gsm; $_ } @_).";\n\n";
 
     if (my ($fn) = $spec =~ m/^=(.+)$/) {
       open(my $fh, '>>', $fn)
