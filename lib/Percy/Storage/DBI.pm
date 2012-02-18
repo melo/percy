@@ -310,7 +310,8 @@ sub _dbi_obj_where {
   return ("$sql WHERE oid=?", $r->{oid}) if defined $r->{oid};
   return ("$sql WHERE type=? AND pk=?", $r->{type}, $r->{pk})
     if defined $r->{type} && defined $r->{pk};
-  Carp::confess("FATAL: insufficient conditions to identify a specific object,");
+  Carp::confess(
+    "FATAL: insufficient conditions to identify a specific object,");
 }
 
 sub _type_fetch {
@@ -435,7 +436,8 @@ sub deploy {
 sub _generate_table_stmts {
   my $class = ref($_[0]) || $_[0];
 
-  Carp::confess("FATAL: redefine the _generate_table_stmts() method in '$class',");
+  Carp::confess(
+    "FATAL: redefine the _generate_table_stmts() method in '$class',");
 }
 
 sub _collect_obj_storage_table_stmts {
