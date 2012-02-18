@@ -192,19 +192,25 @@ sub _associate_slave_to_set {
   my ($self, $dbh, $master, $set_spec, $slave) = @_;
   my $set_name = $set_spec->{set_name};
 
-  if (my $sb = $set_spec->{sorted_by}) {
-    my $field = lc("f_$sb->{type}");
-    $dbh->do("
-      INSERT INTO $set_name (m_oid, s_oid, $field) VALUES (?, ?, ?)
-    ", undef, $master->{oid}, $slave->{oid},
-      $sb->{field}->($self, $slave));
+  try {
+    if (my $sb = $set_spec->{sorted_by}) {
+      my $field = lc("f_$sb->{type}");
+      $dbh->do("
+          INSERT INTO $set_name (m_oid, s_oid, $field)
+                         VALUES (?, ?, ?)
+      ", undef, $master->{oid}, $slave->{oid},
+        $sb->{field}->($self, $slave));
 
-  }
-  else {
-    $dbh->do("
-      INSERT INTO $set_name (m_oid, s_oid) VALUES (?, ?)
-    ", undef, $master->{oid}, $slave->{oid});
-  }
+    }
+    else {
+      $dbh->do("
+          INSERT INTO $set_name (m_oid, s_oid)
+                         VALUES (?, ?)
+      ", undef, $master->{oid}, $slave->{oid});
+    }
+  };
+
+  # FIXME: catch duplicate inserts, ignore them; the rest rethrow
 }
 
 sub delete_from_set {
