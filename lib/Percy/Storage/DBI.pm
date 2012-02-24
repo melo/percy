@@ -22,7 +22,7 @@ sub fetch {
 
   my $spec;
   if (my $type = $r->{type}) {
-    $spec = _type_spec_for($self, $type);
+    $spec = $self->_type_spec_for($type);
     $spec->before_fetch($self, $r);
   }
 
@@ -39,7 +39,7 @@ sub fetch {
 
 sub create {
   my ($self, $type, $data, $pk) = @_;
-  my $spec = _type_spec_for($self, $type);
+  my $spec = $self->_type_spec_for($type);
 
   my $r;
   $self->tx(
@@ -79,7 +79,7 @@ sub update {
       my $type = _type_fetch($dbh, $r);
       return unless defined $type;
 
-      my $spec = _type_spec_for($self, $type);
+      my $spec = $self->_type_spec_for($type);
 
       $spec->before_change($self, $r, 'update');
       $spec->before_update($self, $r);
@@ -106,7 +106,7 @@ sub delete {
       my $type = _type_fetch($dbh, $r);
       return unless defined $type;
 
-      my $spec = _type_spec_for($self, $type);
+      my $spec = $self->_type_spec_for($type);
 
       $spec->before_change($self, $r, 'delete');
       $spec->before_delete($self, $r);
@@ -146,7 +146,7 @@ sub fetch_set {
       $set_elems = $dbh->selectall_arrayref($sql, undef, $master->{oid});
 
       for my $elem (@$set_elems) {
-        my $spec = _type_spec_for($self, $elem->[1]);
+        my $spec = $self->_type_spec_for($elem->[1]);
         $elem = {
           oid  => $elem->[0],
           type => $elem->[1],
@@ -331,18 +331,6 @@ sub _type_fetch {
 }
 
 
-## Shortcuts to the Schema type registry
-sub _type_spec_for {
-  my ($self, $type) = @_;
-  Carp::confess("FATAL: undefined type") unless defined $type;
-
-  my $spec = $self->schema->type_spec($type);
-  Carp::confess "FATAL: type '$type' not registered," unless defined $spec;
-
-  return $spec;
-}
-
-
 ## Builder
 sub connect {
   my ($class, $schema, $dbh) = @_;
@@ -360,7 +348,7 @@ sub build_doc {
 
   my $spec;
   if (!ref($data)) {
-    $spec = _type_spec_for($self, $type);
+    $spec = $self->_type_spec_for($type);
     $data = $spec->decode_from_db($self, $data);
   }
 

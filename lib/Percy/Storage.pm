@@ -22,4 +22,18 @@ sub deploy {
 }
 
 
+#################
+# Type access API
+
+sub _type_spec_for {
+  my ($self, $type) = @_;
+  Carp::confess("FATAL: undefined type") unless defined $type;
+
+  my $spec = $self->schema->type_spec($type);
+  Carp::confess "FATAL: type '$type' not registered," unless defined $spec;
+
+  return $spec;
+}
+
+
 1;
