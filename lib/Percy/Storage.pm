@@ -9,11 +9,18 @@ use namespace::clean;
 
 has 'schema' => (is => 'ro', required => 1);
 
+##########
+# Builders
+
 sub connect {
   my $class = ref($_[0]) || $_[0];
 
   die "FATAL: redefine the connect() method in '$class',";
 }
+
+
+################
+# Deployment API
 
 sub deploy {
   my $class = ref($_[0]) || $_[0];
