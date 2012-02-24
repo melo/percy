@@ -18,6 +18,25 @@ sub connect {
   die "FATAL: redefine the connect() method in '$class',";
 }
 
+sub build_doc {
+  my ($self, $oid, $type, $pk, $data) = @_;
+  my %r;
+
+  my $spec;
+  if (!ref($data)) {
+    $spec = $self->_type_spec_for($type);
+    $data = $spec->decode_from_db($self, $data);
+  }
+
+  $r{oid}  = $oid;
+  $r{type} = $type;
+  $r{pk}   = $pk;
+  $r{d}    = $data;
+
+  return (\%r, $spec) if wantarray;
+  return \%r;
+}
+
 
 ################
 # Deployment API

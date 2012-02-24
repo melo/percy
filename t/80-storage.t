@@ -4,6 +4,7 @@ use lib 't/lib';
 use MyTests;
 use Test::More;
 use Test::Fatal;
+use Test::Deep;
 use Percy::Utils;
 
 my $s   = test_percy_schema();
@@ -80,6 +81,17 @@ subtest 'reconnect' => sub {
 
   $found = select_row($db->dbh, $oid);
   is($found, $uid, 'Select worked, so reconnect worked again');
+};
+
+
+subtest 'build_doc' => sub {
+  my $db = $s->db;
+
+  cmp_deeply(
+    scalar($db->build_doc(1, 'slava', 21, '{"answer": 42}')),
+    {pk => 21, type => 'slava', oid => 1, d => {answer => 42}},
+    'build_doc() with list of args ok'
+  );
 };
 
 
