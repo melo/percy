@@ -92,6 +92,20 @@ subtest 'build_doc' => sub {
     {pk => 21, type => 'slava', oid => 1, d => {answer => 42}},
     'build_doc() with list of args ok'
   );
+
+  my $in = {
+    oid   => 1,
+    type  => 'slava',
+    pk    => 21,
+    data  => '{"answer": 42}',
+    other => 'me',
+  };
+  cmp_deeply(
+    scalar($db->build_doc($in)),
+    {pk => 21, type => 'slava', oid => 1, d => {answer => 42}},
+    'build_doc() with HashRef of args ok'
+  );
+  cmp_deeply($in, {other => 'me'}, '... and args removed as expected');
 };
 
 

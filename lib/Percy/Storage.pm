@@ -22,6 +22,13 @@ sub build_doc {
   my ($self, $oid, $type, $pk, $data) = @_;
   my %r;
 
+  if (ref($oid)) {
+    $pk   = delete $oid->{pk};
+    $type = delete $oid->{type};
+    $data = delete $oid->{data};
+    $oid  = delete $oid->{oid};
+  }
+
   my $spec;
   if (!ref($data)) {
     $spec = $self->_type_spec_for($type);
