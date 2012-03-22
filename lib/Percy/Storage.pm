@@ -5,6 +5,7 @@ package Percy::Storage;
 # AUTHORITY
 
 use Percy::Object;
+use Try::Tiny;
 use namespace::clean;
 
 has 'schema' => (is => 'ro', required => 1);
@@ -32,7 +33,9 @@ sub build_doc {
   my $spec;
   if (!ref($data)) {
     $spec = $self->_type_spec_for($type);
-    $data = $spec->decode_from_db($self, $data);
+
+    try { $data = $spec->decode_from_db($self, $data) }
+    catch { die "FATAL: failed decode_from_db() for $type/$pk - $_" };
   }
 
   $r{oid}  = $oid;
