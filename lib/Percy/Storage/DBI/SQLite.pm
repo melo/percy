@@ -18,7 +18,7 @@ sub _generate_table_stmts {
   my $skip_pk;
   my $tn  = $table->{name};
   my $tbl = "CREATE TABLE IF NOT EXISTS $tn (\n";
-  for my $f (@{$table->{fields}}) {
+  for my $f (@{ $table->{fields} }) {
     $tbl .= ",\n" if $skip_pk;
     $tbl .= "  $f->{name}  $f->{type}";
     if ($f->{is_auto_increment}) {
@@ -29,26 +29,21 @@ sub _generate_table_stmts {
   }
 
   if (!$skip_pk) {
-    $tbl .= "\n  CONSTRAINT ${tn}_pk PRIMARY KEY ("
-      . join(', ', @{$table->{pk}}) . ")\n";
+    $tbl .= "\n  CONSTRAINT ${tn}_pk PRIMARY KEY (" . join(', ', @{ $table->{pk} }) . ")\n";
   }
   $tbl .= ')';
   push @sql_stmts, $tbl;
 
   ## Indexes
-  while (my ($in, $if) = each %{$table->{indexes} || {}}) {
+  while (my ($in, $if) = each %{ $table->{indexes} || {} }) {
     push @sql_stmts,
-        "CREATE INDEX IF NOT EXISTS ${tn}_${in}_idx"
-      . " ON $tn ("
-      . join(', ', @$if) . ")";
+      "CREATE INDEX IF NOT EXISTS ${tn}_${in}_idx" . " ON $tn (" . join(', ', @$if) . ")";
   }
 
   ## Unique keys
-  while (my ($un, $uf) = each %{$table->{unique} || {}}) {
+  while (my ($un, $uf) = each %{ $table->{unique} || {} }) {
     push @sql_stmts,
-        "CREATE UNIQUE INDEX IF NOT EXISTS ${tn}_${un}_un"
-      . " ON $tn ("
-      . join(', ', @$uf) . ")";
+      "CREATE UNIQUE INDEX IF NOT EXISTS ${tn}_${un}_un" . " ON $tn (" . join(', ', @$uf) . ")";
   }
 
   return \@sql_stmts;

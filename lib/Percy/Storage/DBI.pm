@@ -56,8 +56,7 @@ sub create {
       $spec->before_change($self, $r, 'create');
       $spec->before_create($self, $r);
 
-      my $oid = $r->{oid} =
-        _dbi_create_obj($dbh, $r, $spec->encode_to_db($self, $r));
+      my $oid = $r->{oid} = _dbi_create_obj($dbh, $r, $spec->encode_to_db($self, $r));
 
       $spec->after_create($self, $r);
       $spec->after_change($self, $r, 'create');
@@ -310,8 +309,7 @@ sub _dbi_obj_where {
   return ("$sql WHERE oid=?", $r->{oid}) if defined $r->{oid};
   return ("$sql WHERE type=? AND pk=?", $r->{type}, $r->{pk})
     if defined $r->{type} && defined $r->{pk};
-  Carp::confess(
-    "FATAL: insufficient conditions to identify a specific object,");
+  Carp::confess("FATAL: insufficient conditions to identify a specific object,");
 }
 
 sub _type_fetch {
@@ -405,8 +403,7 @@ sub deploy {
 sub _generate_table_stmts {
   my $class = ref($_[0]) || $_[0];
 
-  Carp::confess(
-    "FATAL: redefine the _generate_table_stmts() method in '$class',");
+  Carp::confess("FATAL: redefine the _generate_table_stmts() method in '$class',");
 }
 
 sub _collect_obj_storage_table_stmts {
@@ -430,7 +427,7 @@ sub _collect_obj_storage_table_stmts {
       },
     ],
     pk     => ['pk'],
-    unique => {pk_type => [qw(pk type)]},
+    unique => { pk_type => [qw(pk type)] },
   };
 
   return $self->_generate_table_stmts($table);
@@ -472,7 +469,7 @@ sub _collect_set_table_stmts {
     $type = 'VARCHAR(100)' if $type eq 'String';
     $type = uc($type);
 
-    push @{$table->{fields}}, {name => $field, type => "$type NOT NULL"};
+    push @{ $table->{fields} }, { name => $field, type => "$type NOT NULL" };
     $table->{indexes}{$sn} = ['m_oid', $field];
   }
 

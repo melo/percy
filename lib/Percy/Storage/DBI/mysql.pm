@@ -20,26 +20,24 @@ sub _generate_table_stmts {
   my $tbl = "CREATE TABLE IF NOT EXISTS $tn (\n";
 
   my @fields;
-  for my $f (@{$table->{fields}}) {
+  for my $f (@{ $table->{fields} }) {
     push @fields, "  $f->{name}  $f->{type}";
     $fields[-1] .= " PRIMARY KEY AUTO_INCREMENT" if $f->{is_auto_increment};
   }
   $tbl .= join(",\n", @fields);
 
   if (@$pks > 1) {
-    $tbl .= ",\n\n  CONSTRAINT ${tn}_pk PRIMARY KEY ("
-      . join(', ', @{$table->{pk}}) . ")";
+    $tbl .= ",\n\n  CONSTRAINT ${tn}_pk PRIMARY KEY (" . join(', ', @{ $table->{pk} }) . ")";
   }
 
   ## Indexes
-  while (my ($in, $if) = each %{$table->{indexes} || {}}) {
+  while (my ($in, $if) = each %{ $table->{indexes} || {} }) {
     $tbl .= ",\n  INDEX ${tn}_${in}_idx (" . join(', ', @$if) . ")";
   }
 
   ## Unique keys
-  while (my ($un, $uf) = each %{$table->{unique} || {}}) {
-    $tbl
-      .= ",\n  CONSTRAINT ${tn}_${un}_un UNIQUE (" . join(', ', @$uf) . ")";
+  while (my ($un, $uf) = each %{ $table->{unique} || {} }) {
+    $tbl .= ",\n  CONSTRAINT ${tn}_${un}_un UNIQUE (" . join(', ', @$uf) . ")";
   }
   $tbl .= "\n) ENGINE = InnoDB\n";
 

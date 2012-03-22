@@ -64,7 +64,7 @@ for my $w (qw(before after)) {
     has $attr => (is => 'ro');
 
     no strict 'refs';
-    *{__PACKAGE__ . '::' . $meth} = sub {
+    *{ __PACKAGE__ . '::' . $meth } = sub {
       return ($_[0]{$attr} || sub { })->(@_);
     };
   }
