@@ -144,15 +144,7 @@ sub fetch_set {
 
       $set_elems = $dbh->selectall_arrayref($sql, undef, $master->{oid});
 
-      for my $elem (@$set_elems) {
-        my $spec = $self->_type_spec_for($elem->[1]);
-        $elem = {
-          oid  => $elem->[0],
-          type => $elem->[1],
-          pk   => $elem->[2],
-          d    => $spec->decode_from_db($self, $elem->[3]),
-        };
-      }
+      $_ = $self->build_doc(@$_) for @$set_elems;
     }
   );
 
