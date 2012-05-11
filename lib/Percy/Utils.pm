@@ -9,7 +9,19 @@ use warnings;
 use parent 'Exporter';
 use Class::Load 'try_load_class';
 
-our @EXPORT_OK = qw( generate_uuid );
+our @EXPORT_OK = qw(
+  calc_set_name
+  generate_uuid
+);
+
+
+## Table name builders
+sub calc_set_name {
+  my ($type, $set) = @_;
+  $type = $type->{type} if ref $type;
+
+  return join('_', $type, $set, 'set');
+}
 
 
 ## ID management

@@ -6,6 +6,7 @@ package Percy::Schema;
 
 use Percy::Class;
 use Percy::Schema::Type;
+use Percy::Utils 'calc_set_name';
 
 has 'types' => (default => sub { {} });
 has 'sets'  => (default => sub { {} });
@@ -57,17 +58,10 @@ sub connect_info {
 
 
 ## Set management
-sub set_name {
-  my ($self, $type, $set) = @_;
-  $type = $type->{type} if ref $type;
-
-  return join('_', $type, $set, 'set');
-}
-
 sub set_spec {
   my ($self, $master, $set) = @_;
   my $set_name = $master;
-  $set_name = $self->set_name($master, $set) if defined $set;
+  $set_name = calc_set_name($master, $set) if defined $set;
 
   my $sets = $self->sets;
   return unless exists $sets->{$set_name};
@@ -87,7 +81,7 @@ sub type_spec {
 
     for my $sn (keys %$type_sets) {
       my $si = $type_sets->{$sn};
-      my $fsn = $self->set_name($type, $sn);
+      my $fsn = calc_set_name($type, $sn);
       $si->{master}   = $type;
       $si->{set_name} = $fsn;
       $sets->{$fsn}   = $si;

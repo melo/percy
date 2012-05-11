@@ -5,6 +5,7 @@ package Percy::Storage::DBI;
 # AUTHORITY
 
 use Percy::Class;
+use Percy::Utils 'calc_set_name';
 use Class::Load ();
 use Guard 'guard';
 use Carp ();
@@ -204,7 +205,7 @@ sub _associate_slave_to_set {
 
 sub delete_from_set {
   my ($self, $master, $set, $slave) = @_;
-  my $set_name = $self->schema->set_name($master, $set);
+  my $set_name = calc_set_name($master, $set);
 
   my $r;
   $self->tx(
