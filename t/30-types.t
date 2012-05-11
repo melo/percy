@@ -9,12 +9,9 @@ subtest 'defaults' => sub {
   my $t = Percy::Schema::Type->new(type => 'my_type');
 
   is($t->type, 'my_type', 'type attr works');
-  like($t->generate_id, qr{^[-A-F0-9]{36}$},
-    'generate_id() looks like a UUID');
-  is($t->encode_to_db(undef, {d => {a => 1}}),
-    '{"a":1}', 'encode_to_db() defaults to JSON');
-  cmp_deeply($t->decode_from_db(undef, '{"a":1}'),
-    {a => 1}, 'decode_from_db() defaults to JSON');
+  like($t->generate_id, qr{^[-A-F0-9]{36}$}, 'generate_id() looks like a UUID');
+  is($t->encode_to_db(undef, { d => { a => 1 } }), '{"a":1}', 'encode_to_db() defaults to JSON');
+  cmp_deeply($t->decode_from_db(undef, '{"a":1}'), { a => 1 }, 'decode_from_db() defaults to JSON');
 };
 
 
@@ -35,10 +32,8 @@ subtest 'encode/decode callbacks' => sub {
     decode_from_db_cb => sub { pack('H*', $_[2]) },
   );
 
-  is($t->encode_to_db(undef, {d => 'aaa'}),
-    '616161', 'encode_to_db_cb works...');
-  is($t->decode_from_db(undef, '616161'),
-    'aaa', 'and so does decode_from_db_cb');
+  is($t->encode_to_db(undef, { d => 'aaa' }), '616161', 'encode_to_db_cb works...');
+  is($t->decode_from_db(undef, '616161'), 'aaa', 'and so does decode_from_db_cb');
 };
 
 
@@ -72,14 +67,10 @@ subtest 'db callbacks' => sub {
 subtest 'sets' => sub {
   my $t = Percy::Schema::Type->new(
     type => 'set_type',
-    sets => {'xpto' => {type => 'ypto'}},
+    sets => { 'xpto' => { type => 'ypto' } },
   );
 
-  cmp_deeply(
-    $t->sets,
-    {xpto => {type => 'ypto'}},
-    'Set was configured correctly',
-  );
+  cmp_deeply($t->sets, { xpto => { type => 'ypto' } }, 'Set was configured correctly',);
 };
 
 
