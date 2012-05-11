@@ -4,7 +4,7 @@ package Percy::Storage;
 # VERSION
 # AUTHORITY
 
-use Percy::Object;
+use Percy::Class;
 use Try::Tiny;
 use namespace::clean;
 

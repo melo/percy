@@ -1,6 +1,6 @@
 package MyTests;
 
-use Percy::Object;
+use Percy::Class;
 use MySchema;
 use namespace::clean;
 

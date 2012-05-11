@@ -4,7 +4,7 @@ package Percy::Storage::DBI::SQLite;
 # VERSION
 # AUTHORITY
 
-use Percy::Object;
+use Percy::Class;
 use namespace::clean;
 
 extends 'Percy::Storage::DBI';

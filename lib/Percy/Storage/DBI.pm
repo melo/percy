@@ -4,7 +4,7 @@ package Percy::Storage::DBI;
 # VERSION
 # AUTHORITY
 
-use Percy::Object;
+use Percy::Class;
 use Class::Load ();
 use Try::Tiny;
 use Guard 'guard';

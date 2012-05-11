@@ -1,6 +1,6 @@
-package Percy::Object;
+package Percy::Class;
 
-# ABSTRACT: Small base class for our Percy objects
+# ABSTRACT: Moose defaults to our classes
 # VERSION
 # AUTHORITY
 

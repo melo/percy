@@ -4,7 +4,7 @@ package Percy::Schema::Type;
 # VERSION
 # AUTHORITY
 
-use Percy::Object;
+use Percy::Class;
 use Percy::Utils qw( generate_uuid );
 use JSON::XS qw( encode_json decode_json );
 use namespace::clean -except => 'new';

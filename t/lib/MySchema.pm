@@ -1,6 +1,6 @@
 package MySchema;
 
-use Percy::Object;
+use Percy::Class;
 use File::Temp ();
 use File::Spec::Functions 'catfile';
 use DBI;

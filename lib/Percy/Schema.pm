@@ -4,7 +4,7 @@ package Percy::Schema;
 # VERSION
 # AUTHORITY
 
-use Percy::Object;
+use Percy::Class;
 use Percy::Schema::Type;
 use namespace::clean;
 
