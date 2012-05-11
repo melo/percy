@@ -67,22 +67,37 @@ sub _cleanup_sets {
 
 
 ## DB callbacks
-my $meta = __PACKAGE__->meta;
-for my $w (qw(before after)) {
-  for my $e (qw(change create update delete fetch)) {
-    my $meth = "${w}_${e}";
-    my $attr = "${meth}_cb";
+{
+  my @db_callbacks;
 
-    $meta->add_attribute(
-      $attr => (
-        default => sub {
-          sub { }
-        }
-      )
-    );
-    $meta->add_method($meth => sub { return $_[0]->$attr->(@_) });
+  my $meta = __PACKAGE__->meta;
+  for my $w (qw(before after)) {
+    for my $e (qw(change create update delete fetch)) {
+      my $meth = "${w}_${e}";
+      my $attr = "${meth}_cb";
+
+      $meta->add_attribute($attr => (default => sub { [] }));
+      $meta->add_method($meth => sub { $_->(@_) for @{ $_[0]->$attr }; return });
+      $meta->add_method("add_$attr" => sub { push @{ shift->$attr }, @_ });
+
+      push @db_callbacks, $attr;
+    }
   }
+
+  around BUILDARGS => sub {
+    my $orig  = shift;
+    my $class = shift;
+
+    my $args = @_ == 1 ? $_[0] : {@_};
+
+    for my $cb (@db_callbacks) {
+      $args->{$cb} = [$args->{$cb}] if exists $args->{$cb} && ref($args->{$cb}) ne 'ARRAY';
+    }
+
+    return $class->$orig($args);
+  };
+
+  $meta->make_immutable;
 }
-$meta->make_immutable;
 
 1;

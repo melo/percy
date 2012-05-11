@@ -48,17 +48,24 @@ subtest 'db callbacks' => sub {
         undef, "Type created without '$attr'");
       is($t->$meth(), undef, "... the default does nothing");
 
+      my ($r, $u);
       is(
         exception {
           $t = Percy::Schema::Type->new(
             type => 'x',
-            $attr => sub { uc($attr) },
+            $attr => sub { $r = uc($attr) },
           );
         },
         undef,
         "Type created with '$attr'"
       );
-      is($t->$meth(), uc($attr), "... works now");
+      $t->$meth();    ## Updates $r
+      is($r, $u = uc($attr), "called $meth, updated result as expected");
+
+      my $add_m = "add_$attr";
+      $t->$add_m(sub { $r = "-- $r --" });
+      $t->$meth();
+      is($r, "-- $u --", "called $meth after adding second callback, worked");
     }
   }
 };
