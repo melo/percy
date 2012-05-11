@@ -44,6 +44,14 @@ MySchema->schema->type_spec(x => {});
 }
 
 
+## Allow us to change the behaviour of _tweak_type_spec()
+{
+  my $tweaker;
+  sub _tweak_type_spec { $tweaker->(@_) if $tweaker }
+  sub set_tweak_type_spec { $tweaker = $_[1] }
+}
+
+
 ## Some types to play with
 
 MySchema->schema->type_spec(masta => { sets => { slaves => { slave => 'slava' } } });

@@ -76,6 +76,8 @@ sub type_spec {
   my $sets  = $self->sets;
 
   if ($spec) {
+    $self->_tweak_type_spec($spec);
+
     my $t = Percy::Schema::Type->new(%$spec, type => $type);
     my $type_sets = $t->sets;
     $sets->{ $_->{set_name} } = $_ for values %$type_sets;
@@ -86,6 +88,8 @@ sub type_spec {
   return $self->default_type_spec($type) unless exists $types->{$type};
   return $types->{$type};
 }
+
+sub _tweak_type_spec { }
 
 sub default_type_spec { }
 

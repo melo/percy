@@ -23,10 +23,10 @@ subtest 'type registry' => sub {
     undef, "With missing type, type_spec() doesn't die");
   is($t1, undef, "... and returns undef");
 
-  MySchema->set_default_type_spec({a => 1});
+  MySchema->set_default_type_spec({ a => 1 });
   is(exception { $t1 = $si->type_spec('my_type') },
     undef, "With missing type, type_spec() doesn't die");
-  cmp_deeply($t1, {a => 1}, "... and returns the new default type_spec");
+  cmp_deeply($t1, { a => 1 }, "... and returns the new default type_spec");
 
   my $t2;
   is(exception { $t2 = $si->type_spec(my_type => {}) },
@@ -38,7 +38,7 @@ subtest 'type registry' => sub {
   is(exception { $t3 = $si->type_spec('my_type') },
     undef, 'With a existing type, type_spec() lives');
   is($t3->type, 'my_type', '... expected type attr');
-  is("$t2", "$t3", '... with the same object we got when adding the type');
+  is("$t2",     "$t3",     '... with the same object we got when adding the type');
 };
 
 
@@ -46,10 +46,9 @@ subtest 'sets' => sub {
   my $si = test_percy_schema();
   my $db = $si->db;
 
-  is(exception { $si->type_spec('mt' => {sets => {sn => {slave => 'sl'}}}) },
+  is(exception { $si->type_spec('mt' => { sets => { sn => { slave => 'sl' } } }) },
     undef, 'Added type with set');
-  is(exception { $si->type_spec(sl => {}) },
-    undef, '... and slave type, no sets');
+  is(exception { $si->type_spec(sl => {}) }, undef, '... and slave type, no sets');
 
   cmp_deeply(
     $si->sets,
@@ -67,51 +66,50 @@ subtest 'sets' => sub {
         set_name  => 'sorted_sets_by_date_set',
         slave     => 'slava',
         master    => 'sorted_sets',
-        sorted_by => {field => ignore(), type => 'Date'},
+        sorted_by => { field => ignore(), type => 'Date' },
       },
       sorted_sets_by_datetime_set => {
         set_name  => 'sorted_sets_by_datetime_set',
         slave     => 'slava',
         master    => 'sorted_sets',
-        sorted_by => {field => ignore(), type => 'DateTime'},
+        sorted_by => { field => ignore(), type => 'DateTime' },
       },
       sorted_sets_by_number_set => {
         set_name  => 'sorted_sets_by_number_set',
         slave     => 'slava',
         master    => 'sorted_sets',
-        sorted_by => {field => ignore(), type => 'Integer'},
+        sorted_by => { field => ignore(), type => 'Integer' },
       },
       sorted_sets_by_string_set => {
         set_name  => 'sorted_sets_by_string_set',
         slave     => 'slava',
         master    => 'sorted_sets',
-        sorted_by => {field => ignore(), type => 'String'},
+        sorted_by => { field => ignore(), type => 'String' },
       },
     },
     '... set registry updated',
   );
 
   cmp_deeply(
-    $si->set_spec({type => 'mt'}, 'sn'),
+    $si->set_spec({ type => 'mt' }, 'sn'),
     $si->set_spec('mt_sn_set'),
     'set_spec() accepts both object/set and set_name'
   );
   cmp_deeply(
     $si->set_spec('mt_sn_set'),
-    {slave => 'sl', master => 'mt', set_name => 'mt_sn_set'},
+    { slave => 'sl', master => 'mt', set_name => 'mt_sn_set' },
     '... and return the set spec information properly'
   );
 
   $db->deploy;
   my ($master, $slave);
-  is(exception { $master = $db->create(mt => {m => 1}) },
-    undef, 'Created object for type mt');
-  is(exception { $slave = $db->create_into_set($master, 'sn', {slv => 42}) },
+  is(exception { $master = $db->create(mt => { m => 1 }) }, undef, 'Created object for type mt');
+  is(exception { $slave = $db->create_into_set($master, 'sn', { slv => 42 }) },
     undef, '... added slave to set');
 
   my $slave_copy = $db->fetch($slave);
   ok($slave_copy, 'Got copy of slave object');
-  cmp_deeply($slave_copy->{d}, {slv => 42}, '... with the expected content');
+  cmp_deeply($slave_copy->{d}, { slv => 42 }, '... with the expected content');
 
   my $set_elems;
   is(exception { $set_elems = $db->fetch_set($master, 'sn') },
@@ -122,8 +120,7 @@ subtest 'sets' => sub {
   my $slave2;
   is(
     exception {
-      $slave2 =
-        $db->create_into_set($master, 'sn', {slv => 84}, 'my_super_pk');
+      $slave2 = $db->create_into_set($master, 'sn', { slv => 84 }, 'my_super_pk');
     },
     undef,
     '... added another slave to set, with slave pk'
@@ -133,11 +130,7 @@ subtest 'sets' => sub {
   is(exception { $set_elems = $db->fetch_set($master, 'sn') },
     undef, 'Called fetch_set() without problems');
   is(scalar(@$set_elems), 2, '... got two elements back');
-  cmp_deeply(
-    $set_elems,
-    bag($slave, $slave2),
-    '... expected elements returned'
-  );
+  cmp_deeply($set_elems, bag($slave, $slave2), '... expected elements returned');
 
   my $rows;
   is(exception { $rows = $db->delete_from_set($master, 'sn', $slave) },
@@ -163,19 +156,19 @@ subtest 'sets ordered' => sub {
 
   ## order by number
   cmp_deeply($db->fetch_set($top, 'by_number'), [], 'Empty set');
-  is(exception { $db->create_into_set($top, 'by_number', {number => 4}) },
+  is(exception { $db->create_into_set($top, 'by_number', { number => 4 }) },
     undef, 'Created first slave object into by_number set');
-  $ch2 = $db->create(slava => {number => 2});
+  $ch2 = $db->create(slava => { number => 2 });
   is(exception { $db->add_to_set($top, 'by_number', $ch2) },
     undef, 'Added second slave object to by_number set');
   cmp_deeply(
     $db->fetch_set($top, 'by_number'),
-    [ { d    => {number => 2},
+    [ { d    => { number => 2 },
         oid  => re(qr{^\d+$}),
         pk   => re(qr{^[A-F0-9-]{36}$}),
         type => 'slava'
       },
-      { d    => {number => 4},
+      { d    => { number => 4 },
         oid  => re(qr{^\d+$}),
         pk   => re(qr{^[A-F0-9-]{36}$}),
         type => 'slava'
@@ -186,22 +179,19 @@ subtest 'sets ordered' => sub {
 
   ## order by string
   cmp_deeply($db->fetch_set($top, 'by_string'), [], 'Empty set');
-  is(
-    exception { $db->create_into_set($top, 'by_string', {string => 'bbb'}) },
-    undef,
-    'Created first slave object into by_string set'
-  );
-  $ch2 = $db->create(slava => {string => 'aaa'});
+  is(exception { $db->create_into_set($top, 'by_string', { string => 'bbb' }) },
+    undef, 'Created first slave object into by_string set');
+  $ch2 = $db->create(slava => { string => 'aaa' });
   is(exception { $db->add_to_set($top, 'by_string', $ch2) },
     undef, 'Added second slave object to by_string set');
   cmp_deeply(
     $db->fetch_set($top, 'by_string'),
-    [ { d    => {string => 'aaa'},
+    [ { d    => { string => 'aaa' },
         oid  => re(qr{^\d+$}),
         pk   => re(qr{^[A-F0-9-]{36}$}),
         type => 'slava'
       },
-      { d    => {string => 'bbb'},
+      { d    => { string => 'bbb' },
         oid  => re(qr{^\d+$}),
         pk   => re(qr{^[A-F0-9-]{36}$}),
         type => 'slava'
@@ -214,22 +204,22 @@ subtest 'sets ordered' => sub {
   cmp_deeply($db->fetch_set($top, 'by_date'), [], 'Empty set');
   is(
     exception {
-      $db->create_into_set($top, 'by_date', {date => '2011/01/01'});
+      $db->create_into_set($top, 'by_date', { date => '2011/01/01' });
     },
     undef,
     'Created first slave object into by_date set'
   );
-  $ch2 = $db->create(slava => {date => '2010/01/01'});
+  $ch2 = $db->create(slava => { date => '2010/01/01' });
   is(exception { $db->add_to_set($top, 'by_date', $ch2) },
     undef, 'Added second slave object to by_date set');
   cmp_deeply(
     $db->fetch_set($top, 'by_date'),
-    [ { d    => {date => '2010/01/01'},
+    [ { d    => { date => '2010/01/01' },
         oid  => re(qr{^\d+$}),
         pk   => re(qr{^[A-F0-9-]{36}$}),
         type => 'slava'
       },
-      { d    => {date => '2011/01/01'},
+      { d    => { date => '2011/01/01' },
         oid  => re(qr{^\d+$}),
         pk   => re(qr{^[A-F0-9-]{36}$}),
         type => 'slava'
@@ -242,23 +232,22 @@ subtest 'sets ordered' => sub {
   cmp_deeply($db->fetch_set($top, 'by_datetime'), [], 'Empty set');
   is(
     exception {
-      $db->create_into_set($top, 'by_datetime',
-        {datetime => '2011/01/01 01:00:00'});
+      $db->create_into_set($top, 'by_datetime', { datetime => '2011/01/01 01:00:00' });
     },
     undef,
     'Created first slave object into by_datetime set'
   );
-  $ch2 = $db->create(slava => {datetime => '2011/01/01 00:59:59'});
+  $ch2 = $db->create(slava => { datetime => '2011/01/01 00:59:59' });
   is(exception { $db->add_to_set($top, 'by_datetime', $ch2) },
     undef, 'Added second slave object to by_datetime set');
   cmp_deeply(
     $db->fetch_set($top, 'by_datetime'),
-    [ { d    => {datetime => '2011/01/01 00:59:59'},
+    [ { d    => { datetime => '2011/01/01 00:59:59' },
         oid  => re(qr{^\d+$}),
         pk   => re(qr{^[A-F0-9-]{36}$}),
         type => 'slava'
       },
-      { d    => {datetime => '2011/01/01 01:00:00'},
+      { d    => { datetime => '2011/01/01 01:00:00' },
         oid  => re(qr{^\d+$}),
         pk   => re(qr{^[A-F0-9-]{36}$}),
         type => 'slava'
@@ -278,8 +267,20 @@ subtest 'db' => sub {
   my $db2 = $si->db;
   is($db1, $db2, 'db() returns the same instance');
 
-  is($si, $db1->schema,
-    'DB objects have a reference to the schema who created them');
+  is($si, $db1->schema, 'DB objects have a reference to the schema who created them');
+};
+
+
+subtest 'tweak type' => sub {
+  my $si = MySchema->schema;
+  $si->set_tweak_type_spec(
+    sub {
+      $_[1]{generate_id_cb} = sub {42}
+    }
+  );
+  my $t = $si->type_spec('x' => {});
+
+  is($t->generate_id, 42, 'Type tweaks work');
 };
 
 
