@@ -70,7 +70,11 @@ subtest 'sets' => sub {
     sets => { 'xpto' => { type => 'ypto' } },
   );
 
-  cmp_deeply($t->sets, { xpto => { type => 'ypto' } }, 'Set was configured correctly',);
+  cmp_deeply(
+    $t->sets,
+    { xpto => { type => 'ypto', master => 'set_type', set_name => 'set_type_xpto_set' } },
+    'Set was configured correctly',
+  );
 };
 
 

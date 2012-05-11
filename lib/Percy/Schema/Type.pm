@@ -5,8 +5,11 @@ package Percy::Schema::Type;
 # AUTHORITY
 
 use Percy::Class;
-use Percy::Utils qw( generate_uuid );
+use Percy::Utils qw( generate_uuid calc_set_name );
 use JSON::XS qw( encode_json decode_json );
+
+## Post-build work
+sub BUILD { shift->_cleanup_sets }
 
 
 ## Basic object attributes
@@ -42,6 +45,25 @@ sub decode_from_db { return $_[0]{decode_from_db_cb}(@_) }
 
 ## Sets
 has 'sets' => (default => sub { {} });
+
+sub _cleanup_sets {
+  my ($self)    = @_;
+  my $type      = $self->type;
+  my $type_sets = $self->sets;
+
+  for my $sn (keys %$type_sets) {
+    my $si = $type_sets->{$sn};
+    my $fsn = calc_set_name($type, $sn);
+    $si->{master}   = $type;
+    $si->{set_name} = $fsn;
+
+    if (my $sb = $si->{sorted_by}) {
+      my $f = $sb->{field};
+      $sb->{field} = sub { return $_[1]{d}{$f} }
+        unless ref $f;
+    }
+  }
+}
 
 
 ## DB callbacks

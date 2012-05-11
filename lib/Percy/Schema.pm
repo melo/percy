@@ -78,20 +78,7 @@ sub type_spec {
   if ($spec) {
     my $t = Percy::Schema::Type->new(%$spec, type => $type);
     my $type_sets = $t->sets;
-
-    for my $sn (keys %$type_sets) {
-      my $si = $type_sets->{$sn};
-      my $fsn = calc_set_name($type, $sn);
-      $si->{master}   = $type;
-      $si->{set_name} = $fsn;
-      $sets->{$fsn}   = $si;
-
-      if (my $sb = $si->{sorted_by}) {
-        my $f = $sb->{field};
-        $sb->{field} = sub { return $_[1]{d}{$f} }
-          unless ref $f;
-      }
-    }
+    $sets->{ $_->{set_name} } = $_ for values %$type_sets;
 
     return $types->{$type} = $t;
   }
