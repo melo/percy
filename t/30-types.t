@@ -86,7 +86,8 @@ subtest 'sets' => sub {
 subtest 'bad boys' => sub {
   like(
     exception { Percy::Schema::Type->new },
-    qr/^Died at /, 'no type, will die',
+    qr/^\QAttribute (type) is required at constructor Percy::Schema::Type::new\E/,
+    'no type, will die',
   );
 };
 

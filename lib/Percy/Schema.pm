@@ -6,11 +6,10 @@ package Percy::Schema;
 
 use Percy::Class;
 use Percy::Schema::Type;
-use namespace::clean;
 
-has 'types' => (is => 'ro', default => sub { {} });
-has 'sets'  => (is => 'ro', default => sub { {} });
-has 'db'    => (is => 'ro', builder => '_build_db');
+has 'types' => (default => sub { {} });
+has 'sets'  => (default => sub { {} });
+has 'db'    => (is      => 'lazy');
 
 
 ## Singleton management
@@ -110,4 +109,5 @@ sub type_spec {
 sub default_type_spec { }
 
 
+__PACKAGE__->meta->make_immutable;
 1;

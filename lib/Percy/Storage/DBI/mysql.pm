@@ -5,7 +5,6 @@ package Percy::Storage::DBI::mysql;
 # AUTHORITY
 
 use Percy::Class;
-use namespace::clean;
 
 extends 'Percy::Storage::DBI';
 
@@ -44,4 +43,5 @@ sub _generate_table_stmts {
   return [$tbl];
 }
 
+__PACKAGE__->meta->make_immutable;
 1;

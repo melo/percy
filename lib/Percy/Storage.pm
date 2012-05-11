@@ -5,10 +5,8 @@ package Percy::Storage;
 # AUTHORITY
 
 use Percy::Class;
-use Try::Tiny;
-use namespace::clean;
 
-has 'schema' => (is => 'ro', required => 1);
+has 'schema' => (required => 1);
 
 ##########
 # Builders
@@ -72,4 +70,5 @@ sub _type_spec_for {
 }
 
 
+__PACKAGE__->meta->make_immutable;
 1;

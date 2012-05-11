@@ -5,7 +5,6 @@ package Percy::Storage::DBI::SQLite;
 # AUTHORITY
 
 use Percy::Class;
-use namespace::clean;
 
 extends 'Percy::Storage::DBI';
 
@@ -49,4 +48,5 @@ sub _generate_table_stmts {
   return \@sql_stmts;
 }
 
+__PACKAGE__->meta->make_immutable;
 1;

@@ -6,10 +6,8 @@ package Percy::Storage::DBI;
 
 use Percy::Class;
 use Class::Load ();
-use Try::Tiny;
 use Guard 'guard';
 use Carp ();
-use namespace::clean;
 
 extends 'Percy::Storage';
 
@@ -493,4 +491,5 @@ sub _deploy_exec_sql_stmts {
 }
 
 
+__PACKAGE__->meta->make_immutable;
 1;

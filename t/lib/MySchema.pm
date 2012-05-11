@@ -4,7 +4,6 @@ use Percy::Class;
 use File::Temp ();
 use File::Spec::Functions 'catfile';
 use DBI;
-use namespace::clean;
 
 extends 'Percy::Schema';
 
@@ -77,4 +76,5 @@ MySchema->schema->type_spec(
 );
 
 
+__PACKAGE__->meta->make_immutable;
 1;

@@ -2,7 +2,6 @@ package MyTests;
 
 use Percy::Class;
 use MySchema;
-use namespace::clean;
 
 ## Export our builder function
 sub import {
@@ -23,4 +22,5 @@ sub _build_test_percy_schema {
 }
 
 
+__PACKAGE__->meta->make_immutable;
 1;
