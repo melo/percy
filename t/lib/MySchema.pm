@@ -28,7 +28,7 @@ MySchema->schema->type_spec(x => {});
           $dbi,
           ($ENV{PERCY_USER} || ''),
           ($ENV{PERCY_PASS} || ''),
-          {RaiseError => 1, AutoCommit => 1}
+          { RaiseError => 1, AutoCommit => 1 }
         );
       },
     };
@@ -46,8 +46,7 @@ MySchema->schema->type_spec(x => {});
 
 ## Some types to play with
 
-MySchema->schema->type_spec(
-  masta => {sets => {slaves => {slave => 'slava'}}});
+MySchema->schema->type_spec(masta => { sets => { slaves => { slave => 'slava' } } });
 MySchema->schema->type_spec(slava => {});
 
 
@@ -57,19 +56,19 @@ MySchema->schema->type_spec(
     sets => {
       by_number => {
         slave     => 'slava',
-        sorted_by => {field => 'number', type => 'Integer'},
+        sorted_by => { field => 'number', type => 'Integer' },
       },
       by_string => {
         slave     => 'slava',
-        sorted_by => {field => 'string', type => 'String'},
+        sorted_by => { field => 'string', type => 'String' },
       },
       by_date => {
         slave     => 'slava',
-        sorted_by => {field => 'date', type => 'Date'},
+        sorted_by => { field => 'date', type => 'Date' },
       },
       by_datetime => {
         slave     => 'slava',
-        sorted_by => {field => 'datetime', type => 'DateTime'},
+        sorted_by => { field => 'datetime', type => 'DateTime' },
       },
     },
   },
