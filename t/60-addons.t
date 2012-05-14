@@ -39,6 +39,15 @@ subtest 'DBI::IDTable' => sub {
 
   $row = _dbi_fetch('xs', x_id => $doc->{pk});
   is($row, undef, 'After delete, mapping row deleted too');
+
+  ## Update on non-existing row
+  $db->_dbh->do('DELETE FROM xs WHERE x_id=?', undef, $doc->{pk});
+  $row = _dbi_fetch('xs', x_id => $doc->{pk});
+  ok(!$row, "Make sure mapping row for id $doc->{pk} is missing");
+  $db->update($doc);
+  $row = _dbi_fetch('xs', x_id => $doc->{pk});
+  ok($row, 'Update with missing row on mapping table, a row is created');
+  cmp_deeply($row, { x_id => $doc->{pk}, f1 => 'wxyz', f2 => 'QRST' }, '... with the expected content');
 };
 
 

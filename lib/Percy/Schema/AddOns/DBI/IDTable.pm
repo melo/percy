@@ -38,7 +38,11 @@ before '_tweak_type_spec' => sub {
     unshift @$ucbs, sub {
       my ($type, $db, $r) = @_;
 
-      $db->_dbh->do($upd_s, undef, (map { ref($_) ? $_->($r) : $r->{d}{$_} } @bnd), $r->{pk});
+      my $dbh = $db->_dbh;
+      my $rows = $dbh->do($upd_s, undef, (map { ref($_) ? $_->($r) : $r->{d}{$_} } @bnd), $r->{pk});
+      if ($rows && $rows == 0) {
+        $dbh->do($ins_s, undef, $r->{pk}, map { ref($_) ? $_->($r) : $r->{d}{$_} } @bnd);
+      }
     };
 
     my $dcbs = $spec->{after_delete_cb} ||= [];
