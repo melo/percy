@@ -48,6 +48,7 @@ subtest 'DBI::IDTable just for ID' => sub {
   #create
   my $doc = $db->create(
     z => {
+      z_id   => 99,
       f_zero => 'abc',
       f_one  => 'def',
       f_two  => 'ghi',
@@ -58,6 +59,7 @@ subtest 'DBI::IDTable just for ID' => sub {
   ok($row, 'After create, got row from ID table...');
   cmp_deeply($row, { z_id => $doc->{pk}, f1 => undef }, '... with the expected content');
   is($doc->{d}{z_id}, $doc->{pk}, '... key field is updated on the document');
+  isnt($doc->{pk}, 99, "... didn't use the input key field, migrations not allowed for type");
 
   ## Update
   $doc->{d}{f_one} = 'wxyz';
@@ -77,6 +79,25 @@ subtest 'DBI::IDTable just for ID' => sub {
 };
 
 
+subtest 'DBI::IDTable with migration' => sub {
+  ## Create
+  my $doc = $db->create(
+    x => {
+      x_id   => 42,
+      f_zero => 'abc',
+      f_one  => 'def',
+      f_two  => 'ghi',
+    }
+  );
+
+  my $row = _dbi_fetch('xs', x_id => $doc->{pk});
+  ok($row, 'After create, got row from ID table...');
+  cmp_deeply($row, { x_id => $doc->{pk}, f1 => 'def', f2 => 'GHI' }, '... with the expected content');
+  is($doc->{d}{x_id}, $doc->{pk}, '... key field is updated on the document');
+  is($doc->{pk},      42,         '... this is a migration, used the input key field');
+};
+
+
 done_testing();
 
 
@@ -93,6 +114,7 @@ sub _deploy_x_type {
           f1 => 'f_one',
           f2 => sub { uc($_[0]{d}{f_two}) },
         },
+        migrate_ok => 1,
       },
     }
   );

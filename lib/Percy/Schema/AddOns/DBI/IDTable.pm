@@ -15,17 +15,19 @@ before '_tweak_type_spec' => sub {
 
   my @fns   = keys %$flds;
   my @bnd   = values %$flds;
-  my $ins_s = "INSERT INTO $tbl (" . join(', ', $key, @fns) . ') VALUES (' . join(', ', 'NULL', ('?') x @bnd) . ")";
+  my $ins_s = "INSERT INTO $tbl (" . join(', ', $key, @fns) . ') VALUES (' . join(', ', '?', ('?') x @bnd) . ")";
   my $upd_s = "UPDATE $tbl SET " . join(', ', map {"$_=?"} @fns) . " WHERE $key=?";
   my $del_s = "DELETE FROM $tbl WHERE $key=?";
 
   $spec->{generate_id_cb} = sub {
     my ($type, $db, $r) = @_;
 
-    my $dbh = $db->_dbh;
-    $dbh->do($ins_s, undef, map { ref($_) ? $_->($r) : $r->{d}{$_} } @bnd);
+    my $id = $it->{migrate_ok} ? $r->{d}{$key} : undef;
 
-    my $id = $dbh->last_insert_id(undef, undef, undef, undef);
+    my $dbh = $db->_dbh;
+    $dbh->do($ins_s, undef, $id, map { ref($_) ? $_->($r) : $r->{d}{$_} } @bnd);
+
+    $id = $dbh->last_insert_id(undef, undef, undef, undef) unless $id;
     $r->{d}{$key} = $id;
 
     return $id;
