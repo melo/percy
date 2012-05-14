@@ -22,7 +22,11 @@ before '_tweak_type_spec' => sub {
 
     my $dbh = $db->_dbh;
     $dbh->do($ins_s, undef, map { ref($_) ? $_->($r) : $r->{d}{$_} } @bnd);
-    return $dbh->last_insert_id(undef, undef, undef, undef);
+
+    my $id = $dbh->last_insert_id(undef, undef, undef, undef);
+    $r->{d}{$key} = $id;
+
+    return $id;
   };
 
   my $ucbs = $spec->{after_update_cb} ||= [];

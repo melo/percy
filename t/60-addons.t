@@ -23,6 +23,7 @@ subtest 'DBI::IDTable' => sub {
   my $row = _dbi_fetch('xs', x_id => $doc->{pk});
   ok($row, 'After create, got row from ID table...');
   cmp_deeply($row, { x_id => $doc->{pk}, f1 => 'def', f2 => 'GHI' }, '... with the expected content');
+  is($doc->{d}{x_id}, $doc->{pk}, '... key field is updated on the document too');
 
   ## Update
   $doc->{d}{f_one} = 'wxyz';
