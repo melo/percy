@@ -11,9 +11,11 @@ before '_tweak_type_spec' => sub {
   my $tbl  = $it->{name};
   my $flds = $it->{fields};
 
+  $flds = {} unless $flds;
+
   my @fns   = keys %$flds;
   my @bnd   = values %$flds;
-  my $ins_s = "INSERT INTO $tbl (" . join(', ', @fns) . ') VALUES (' . join(', ', ('?') x @bnd) . ")";
+  my $ins_s = "INSERT INTO $tbl (" . join(', ', $key, @fns) . ') VALUES (' . join(', ', 'NULL', ('?') x @bnd) . ")";
   my $upd_s = "UPDATE $tbl SET " . join(', ', map {"$_=?"} @fns) . " WHERE $key=?";
   my $del_s = "DELETE FROM $tbl WHERE $key=?";
 
@@ -29,19 +31,21 @@ before '_tweak_type_spec' => sub {
     return $id;
   };
 
-  my $ucbs = $spec->{after_update_cb} ||= [];
-  unshift @$ucbs, sub {
-    my ($type, $db, $r) = @_;
+  unless ($it->{id_only}) {
+    my $ucbs = $spec->{after_update_cb} ||= [];
+    unshift @$ucbs, sub {
+      my ($type, $db, $r) = @_;
 
-    $db->_dbh->do($upd_s, undef, (map { ref($_) ? $_->($r) : $r->{d}{$_} } @bnd), $r->{pk});
-  };
+      $db->_dbh->do($upd_s, undef, (map { ref($_) ? $_->($r) : $r->{d}{$_} } @bnd), $r->{pk});
+    };
 
-  my $dcbs = $spec->{after_delete_cb} ||= [];
-  unshift @$dcbs, sub {
-    my ($type, $db, $r) = @_;
+    my $dcbs = $spec->{after_delete_cb} ||= [];
+    unshift @$dcbs, sub {
+      my ($type, $db, $r) = @_;
 
-    $db->_dbh->do($del_s, undef, $r->{pk});
-  };
+      $db->_dbh->do($del_s, undef, $r->{pk});
+    };
+  }
 };
 
 
