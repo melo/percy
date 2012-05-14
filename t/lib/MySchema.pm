@@ -6,6 +6,7 @@ use File::Spec::Functions 'catfile';
 use DBI;
 
 extends 'Percy::Schema';
+with 'Percy::Schema::AddOns::DBI::IDTable';
 
 
 ## Add a 'x' type with default values
