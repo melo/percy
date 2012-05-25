@@ -12,6 +12,16 @@ before '_tweak_type_spec' => sub {
   my $flds = $it->{fields};
 
   $flds = {} unless $flds;
+  if (ref($flds) eq 'ARRAY') {
+    my %fields;
+    while (@$flds) {
+      my $name = shift @$flds;
+      my $spec = $name;
+      $spec = shift @$flds if @$flds && ref($flds->[0]);
+      $fields{$name} = $spec;
+    }
+    $flds = \%fields;
+  }
 
   my @fns   = keys %$flds;
   my @bnd   = values %$flds;
