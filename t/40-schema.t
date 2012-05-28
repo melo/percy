@@ -145,6 +145,26 @@ subtest 'sets' => sub {
   is(exception { $rows = $db->delete_from_set($master, 'sn', $slave) },
     undef, 'delete_from_set() with slave not in set lives');
   is(0 + $rows, 0, '... expected number of set elements deleted');
+
+  subtest 'clear_set()' => sub {
+    is(
+      exception {
+        $db->create_into_set($master, 'sn', { slv => 21 });
+        $db->create_into_set($master, 'sn', { slv => 42 });
+        $db->create_into_set($master, 'sn', { slv => 84 });
+      },
+      undef,
+      'Added 3 more slaves to set'
+    );
+
+    is(exception { $set_elems = $db->fetch_set($master, 'sn') }, undef, '... fetch_set() ok');
+    is(scalar(@$set_elems), 4, '... have four elements total now');
+
+    is(exception { $db->clear_set($master, 'sn') }, undef, 'clear_set(), it lives!');
+
+    is(exception { $set_elems = $db->fetch_set($master, 'sn') }, undef, '... fetch_set() ok');
+    is(scalar(@$set_elems), 0, '... got zero elements back, clear_set() worked');
+  };
 };
 
 

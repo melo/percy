@@ -223,6 +223,25 @@ sub delete_from_set {
   return $r;
 }
 
+sub clear_set {
+  my ($self, $master, $set) = @_;
+  my $set_name = calc_set_name($master, $set);
+
+  my $r;
+  $self->tx(
+    sub {
+      my ($db, $dbh) = @_;
+
+      $r = $dbh->do("
+        DELETE FROM $set_name
+         WHERE m_oid=?",
+        undef, $master->{oid});
+    }
+  );
+
+  return $r;
+}
+
 
 ## Parser for parameters
 sub _parse_args {
