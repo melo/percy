@@ -6,6 +6,7 @@ package Percy::Class;
 
 use strict;
 use warnings;
+use Import::Into;
 use Moose                      ();
 use MooseX::HasDefaults::RO    ();
 use MooseX::StrictConstructor  ();
@@ -27,7 +28,7 @@ sub init_meta {
   warnings->import;
   strict->import;
 
-  Try::Tiny->export_to_level(2);
+  Try::Tiny->import::into($for_class);
 
   Moose->init_meta(@_);
   MooseX::HasDefaults::RO->import({ into => $for_class });
